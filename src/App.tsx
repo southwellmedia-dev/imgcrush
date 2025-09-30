@@ -2,8 +2,9 @@ import React, { useState, useCallback } from "react";
 import { ImageUpload } from "./components/features/ImageUpload";
 import { ImageProcessor } from "./components/features/ImageProcessor";
 import { ProcessingControls } from "./components/features/ProcessingControls";
-import { ResultsHeader } from "./components/ui/ResultsHeader";
+import { ResultsHeader, ViewMode } from "./components/ui/ResultsHeader";
 import { Footer } from "./components/ui/Footer";
+import { ProductTour } from "./components/ui/ProductTour";
 import { ProcessedImage } from "./types";
 import { applyPreset } from "./presets/compressionPresets";
 
@@ -11,6 +12,7 @@ function App() {
   const [files, setFiles] = useState<File[]>([]);
   const [processedImages, setProcessedImages] = useState<ProcessedImage[]>([]);
   const [selectedPreset, setSelectedPreset] = useState<string>('compression-only');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [processingSettings, setProcessingSettings] = useState({
     quality: 0.80,
     maxWidth: 99999,
@@ -34,9 +36,10 @@ function App() {
         processedSize: 0,
         processing: false,
         processed: false,
+        settings: { ...processingSettings }, // Attach current global settings to new images
       })),
     ]);
-  }, []);
+  }, [processingSettings]);
 
   const handleRemoveFile = useCallback(
     (id: string) => {
@@ -64,10 +67,11 @@ function App() {
     const newSettings = applyPreset(presetId, processingSettings);
     setProcessingSettings(newSettings);
 
-    // Reset all images to unprocessed state to trigger reprocessing with new preset
+    // Reset all images to unprocessed state and update their settings to trigger reprocessing with new preset
     setProcessedImages((prev) =>
       prev.map((img) => ({
         ...img,
+        settings: { ...newSettings }, // Update each image's settings
         processed: false,
         processing: false,
         processedBlob: null,
@@ -105,10 +109,47 @@ function App() {
     }
   }, []);
 
+  const handleUpdateImageSettings = useCallback((imageId: string, settings: any) => {
+    setProcessedImages((prev) =>
+      prev.map((img) =>
+        img.id === imageId
+          ? {
+              ...img,
+              settings,
+              processed: false, // Trigger reprocessing
+              processing: false,
+              processedBlob: null,
+              processedSize: 0
+            }
+          : img
+      )
+    );
+  }, []);
+
+  const handleApplySettingsToAll = useCallback((settings: any) => {
+    // Apply settings to all images and trigger reprocessing
+    setProcessedImages((prev) =>
+      prev.map((img) => ({
+        ...img,
+        settings: { ...settings },
+        processed: false,
+        processing: false,
+        processedBlob: null,
+        processedSize: 0
+      }))
+    );
+
+    // Also update global settings
+    setProcessingSettings(settings);
+  }, []);
+
   const hasImages = processedImages.length > 0;
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      {/* Product Tour - Disabled for now */}
+      {/* <ProductTour hasImages={hasImages} /> */}
+
       <main className="flex-1">
         {!hasImages ? (
           <>
@@ -129,7 +170,11 @@ function App() {
         ) : (
           // Processing view with images
           <>
-            <ResultsHeader onReset={handleClearAll} />
+            <ResultsHeader
+              onReset={handleClearAll}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
             <div className="container mx-auto px-4 py-8">
               <div className="max-w-7xl mx-auto space-y-8">
                 <ImageProcessor
@@ -139,6 +184,9 @@ function App() {
                   onUpdateImage={updateProcessedImage}
                   onFilesSelected={handleFilesSelected}
                   onCustomize={handleScrollToCustomize}
+                  onUpdateImageSettings={handleUpdateImageSettings}
+                  onApplyToAll={handleApplySettingsToAll}
+                  viewMode={viewMode}
                 />
 
                 <div id="settings-section" className="pt-8 border-t border-gray-200">

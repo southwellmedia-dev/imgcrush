@@ -6,6 +6,7 @@ export interface ProcessedImage {
   processedSize: number;
   processing: boolean;
   processed: boolean;
+  settings?: ProcessingSettings; // Per-image settings (overrides global if present)
 }
 
 export interface ProcessingSettings {
