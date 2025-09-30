@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { ImageCard } from './ImageCard';
+import { ImageTableView } from './ImageTableView';
 import { DownloadAll } from './DownloadAll';
 import { ImageUpload } from './ImageUpload';
 import { ProcessedImage, ProcessingSettings } from '../../types';
 import { processImage } from '../../utils/imageProcessor';
+import { ViewMode } from '../ui/ResultsHeader';
 
 interface ImageProcessorProps {
   images: ProcessedImage[];
@@ -12,6 +14,9 @@ interface ImageProcessorProps {
   onUpdateImage: (id: string, update: Partial<ProcessedImage>) => void;
   onFilesSelected?: (files: File[]) => void;
   onCustomize?: () => void;
+  onUpdateImageSettings?: (imageId: string, settings: ProcessingSettings) => void;
+  onApplyToAll?: (settings: ProcessingSettings) => void;
+  viewMode?: ViewMode;
 }
 
 export function ImageProcessor({
@@ -20,7 +25,10 @@ export function ImageProcessor({
   onRemoveImage,
   onUpdateImage,
   onFilesSelected,
-  onCustomize
+  onCustomize,
+  onUpdateImageSettings,
+  onApplyToAll,
+  viewMode = 'grid'
 }: ImageProcessorProps) {
   const regenerateImage = async (imageId: string) => {
     const image = images.find(img => img.id === imageId);
@@ -53,7 +61,9 @@ export function ImageProcessor({
         onUpdateImage(image.id, { processing: true });
 
         try {
-          const processedBlob = await processImage(image.originalFile, settings);
+          // Use per-image settings if available, otherwise fall back to global settings
+          const imageSettings = image.settings || settings;
+          const processedBlob = await processImage(image.originalFile, imageSettings);
           onUpdateImage(image.id, {
             processedBlob,
             processedSize: processedBlob.size,
@@ -76,27 +86,58 @@ export function ImageProcessor({
 
   return (
     <div className="space-y-6">
-      {/* Combined grid with images and upload zone */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {images.map((image) => (
-          <ImageCard
-            key={image.id}
-            image={image}
-            onRemove={() => onRemoveImage(image.id)}
-            onRegenerate={() => regenerateImage(image.id)}
-          />
-        ))}
+      {/* Conditional rendering based on view mode */}
+      {viewMode === 'grid' ? (
+        <>
+          {/* Grid View */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {images.map((image) => (
+              <ImageCard
+                key={image.id}
+                image={image}
+                onRemove={() => onRemoveImage(image.id)}
+                onRegenerate={() => regenerateImage(image.id)}
+                globalSettings={settings}
+                onUpdateSettings={onUpdateImageSettings}
+                onApplyToAll={onApplyToAll}
+              />
+            ))}
 
-        {/* Add more images - fills remaining columns with full height */}
-        {onFilesSelected && (
-          <div style={dropZoneStyle} className="h-full">
-            <ImageUpload onFilesSelected={onFilesSelected} minimal={false} />
+            {/* Add more images - fills remaining columns with full height */}
+            {onFilesSelected && (
+              <div style={dropZoneStyle} className="h-full">
+                <ImageUpload onFilesSelected={onFilesSelected} minimal={false} />
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </>
+      ) : (
+        <>
+          {/* Table/List View */}
+          <ImageTableView
+            images={images}
+            onRemove={onRemoveImage}
+            globalSettings={settings}
+            onUpdateSettings={onUpdateImageSettings}
+            onApplyToAll={onApplyToAll}
+          />
+
+          {/* Add more images button for table view */}
+          {onFilesSelected && (
+            <div style={{ minHeight: '200px' }}>
+              <ImageUpload onFilesSelected={onFilesSelected} minimal={false} />
+            </div>
+          )}
+        </>
+      )}
 
       {/* Batch download */}
-      <DownloadAll images={images} onCustomize={onCustomize} />
+      <DownloadAll images={images} onCustomize={onCustomize} onClearAll={() => {
+        // Clear all will be handled by parent
+        if (window.confirm('Remove all images and start over?')) {
+          images.forEach(img => onRemoveImage(img.id));
+        }
+      }} />
     </div>
   );
 }

@@ -12,16 +12,16 @@ const theme = createTheme({
   primaryColor: 'red',
   colors: {
     red: [
-      '#fff1f2',
-      '#ffe4e6',
-      '#fecdd3',
-      '#fda4af',
-      '#fb7185',
-      '#f43f5e',
-      '#e11d48',
-      '#be123c',
-      '#9f1239',
-      '#881337'
+      '#fef2f2',  // 0 - lightest
+      '#fee2e2',  // 1
+      '#fecaca',  // 2
+      '#fca5a5',  // 3
+      '#f87171',  // 4
+      '#ef4444',  // 5 - base (true red)
+      '#dc2626',  // 6 - primary (darker red)
+      '#b91c1c',  // 7
+      '#991b1b',  // 8
+      '#7f1d1d'   // 9 - darkest
     ]
   },
   defaultRadius: 'md',

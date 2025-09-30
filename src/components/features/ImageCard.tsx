@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, Loader, Check, ArrowRight, Maximize2, FileType, Percent, AlertTriangle, RefreshCw, Eye } from 'lucide-react';
+import { Download, X, Loader, Check, ArrowRight, Maximize2, FileType, Percent, AlertTriangle, RefreshCw, Eye, Settings2 } from 'lucide-react';
 import { Card, Image as MantineImage, Text, Button, Group, Stack, Badge, Paper, Progress, Tooltip, ActionIcon, Alert, Modal } from '@mantine/core';
-import { ProcessedImage } from '../../types';
+import { ProcessedImage, ProcessingSettings } from '../../types';
 import { formatFileSize } from '../../utils/fileUtils';
 import { ImageComparison } from '../comparison/ImageComparison';
+import { ImageSettingsModal } from './ImageSettingsModal';
 
 interface ImageCardProps {
   image: ProcessedImage;
   onRemove: () => void;
   onRegenerate?: () => void;
+  globalSettings: ProcessingSettings;
+  onUpdateSettings?: (imageId: string, settings: ProcessingSettings) => void;
+  onApplyToAll?: (settings: ProcessingSettings) => void;
 }
 
-export function ImageCard({ image, onRemove, onRegenerate }: ImageCardProps) {
+export function ImageCard({ image, onRemove, onRegenerate, globalSettings, onUpdateSettings, onApplyToAll }: ImageCardProps) {
   const [originalUrl, setOriginalUrl] = useState<string>('');
   const [processedUrl, setProcessedUrl] = useState<string>('');
   const [originalDimensions, setOriginalDimensions] = useState<{ width: number; height: number } | null>(null);
   const [processedDimensions, setProcessedDimensions] = useState<{ width: number; height: number } | null>(null);
   const [showComparison, setShowComparison] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     const url = URL.createObjectURL(image.originalFile);
@@ -74,7 +79,7 @@ export function ImageCard({ image, onRemove, onRegenerate }: ImageCardProps) {
      originalDimensions.height !== processedDimensions.height);
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
+    <Card shadow="sm" padding="lg" radius="md" withBorder data-tour="image-card">
       <Card.Section>
         <div style={{ position: 'relative', backgroundColor: '#f8f9fa', height: 250, overflow: 'hidden' }}>
           {image.processing ? (
@@ -140,7 +145,7 @@ export function ImageCard({ image, onRemove, onRegenerate }: ImageCardProps) {
 
         {/* Optimization Details */}
         {image.processed && (
-          <Paper p="sm" bg="gray.0" radius="sm">
+          <Paper p="sm" bg="gray.0" radius="md">
             <Stack gap="xs">
               {/* File Size */}
               <Group justify="space-between">
@@ -210,7 +215,7 @@ export function ImageCard({ image, onRemove, onRegenerate }: ImageCardProps) {
 
         <Stack gap="sm">
           {image.processed ? (
-            <Group>
+            <Group grow>
               <Tooltip label="Download compressed image">
                 <ActionIcon
                   variant="filled"
@@ -222,6 +227,18 @@ export function ImageCard({ image, onRemove, onRegenerate }: ImageCardProps) {
                   <Download size={18} />
                 </ActionIcon>
               </Tooltip>
+              <Tooltip label="Adjust settings">
+                <ActionIcon
+                  variant="light"
+                  color="gray"
+                  size="lg"
+                  onClick={() => setShowSettings(true)}
+                  style={{ flex: 1 }}
+                  data-tour="image-settings-button"
+                >
+                  <Settings2 size={18} />
+                </ActionIcon>
+              </Tooltip>
               <Tooltip label={showComparison ? "Hide comparison" : "Show comparison"}>
                 <ActionIcon
                   variant="light"
@@ -229,6 +246,7 @@ export function ImageCard({ image, onRemove, onRegenerate }: ImageCardProps) {
                   size="lg"
                   onClick={() => setShowComparison(!showComparison)}
                   style={{ flex: 1 }}
+                  data-tour="image-compare-button"
                 >
                   <Eye size={18} />
                 </ActionIcon>
@@ -245,6 +263,18 @@ export function ImageCard({ image, onRemove, onRegenerate }: ImageCardProps) {
             </Button>
           )}
         </Stack>
+
+        {/* Settings Modal */}
+        {onUpdateSettings && (
+          <ImageSettingsModal
+            opened={showSettings}
+            onClose={() => setShowSettings(false)}
+            image={image}
+            globalSettings={globalSettings}
+            onSave={onUpdateSettings}
+            onApplyToAll={onApplyToAll}
+          />
+        )}
 
         {/* Comparison Modal */}
         <Modal

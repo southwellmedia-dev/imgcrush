@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, X, ChevronDown, RefreshCw, Lock, Unlock } from 'lucide-react';
+import { Settings, X, ChevronDown, RefreshCw, Lock, Unlock, ChevronUp } from 'lucide-react';
 import { Slider, Select, NumberInput, Button, Group, Text, Stack, Paper, Grid, Badge, ActionIcon, Switch, Tooltip } from '@mantine/core';
 import { ProcessingSettings } from '../../types';
 import { COMPRESSION_PRESETS, getPresetById } from '../../presets/compressionPresets';
@@ -21,6 +21,7 @@ export function ProcessingControls({
   onPresetChange,
   onRegenerateAll
 }: ProcessingControlsProps) {
+  const [collapsed, setCollapsed] = useState(true); // Start collapsed by default
   const [showAdvanced, setShowAdvanced] = useState(selectedPreset === 'custom');
   const [maintainAspectRatio, setMaintainAspectRatio] = useState(true);
   const [aspectRatio, setAspectRatio] = useState(16 / 9); // Default aspect ratio
@@ -67,40 +68,131 @@ export function ProcessingControls({
   const currentPreset = getPresetById(selectedPreset);
   const isCustomPreset = selectedPreset === 'custom';
 
+  // Collapsed view - just summary
+  if (collapsed) {
+    return (
+      <Stack gap="md" mb="xl">
+        <Paper p="lg" withBorder radius="md" bg="gray.0" data-tour="global-settings">
+          <Stack gap="sm">
+            <Group justify="space-between" align="start">
+              <div>
+                <Group gap="xs" mb={4}>
+                  <Settings size={18} />
+                  <Text size="lg" fw={700}>
+                    Global Settings
+                  </Text>
+                  <Badge variant="light" color="blue" size="sm">
+                    All Images
+                  </Badge>
+                </Group>
+                <Text size="xs" c="dimmed" mb="md">
+                  These settings apply to all images by default. Customize individual images using the ⚙️ button on each card above.
+                </Text>
+                <Group gap="md">
+                  <div>
+                    <Text size="xs" c="dimmed" mb={2}>Preset</Text>
+                    <Text size="sm" fw={600}>
+                      {currentPreset?.icon} {currentPreset?.name}
+                    </Text>
+                  </div>
+                  <div>
+                    <Text size="xs" c="dimmed" mb={2}>Format</Text>
+                    <Text size="sm" fw={600}>{settings.format.toUpperCase()}</Text>
+                  </div>
+                  <div>
+                    <Text size="xs" c="dimmed" mb={2}>Quality</Text>
+                    <Text size="sm" fw={600}>{Math.round(settings.quality * 100)}%</Text>
+                  </div>
+                  <div>
+                    <Text size="xs" c="dimmed" mb={2}>Resize</Text>
+                    <Text size="sm" fw={600}>
+                      {settings.resizeMode === 'percentage'
+                        ? settings.percentage === 100 ? 'None' : `${settings.percentage}%`
+                        : settings.resizeMode === 'max-dimensions' && (settings.maxWidth >= 99999 || settings.maxHeight >= 99999)
+                        ? 'None'
+                        : settings.resizeMode === 'max-dimensions'
+                        ? `${settings.maxWidth}×${settings.maxHeight}px`
+                        : `${settings.exactWidth}×${settings.exactHeight}px`}
+                    </Text>
+                  </div>
+                </Group>
+              </div>
+              <Group gap="xs">
+                {onRegenerateAll && (
+                  <Button
+                    variant="light"
+                    color="red"
+                    size="sm"
+                    leftSection={<RefreshCw size={14} />}
+                    onClick={onRegenerateAll}
+                  >
+                    Regenerate All
+                  </Button>
+                )}
+                <Button
+                  variant="filled"
+                  color="red"
+                  size="sm"
+                  leftSection={<ChevronDown size={16} />}
+                  onClick={() => setCollapsed(false)}
+                >
+                  Customize Global
+                </Button>
+              </Group>
+            </Group>
+          </Stack>
+        </Paper>
+      </Stack>
+    );
+  }
+
+  // Expanded view - full settings
   return (
     <Stack gap="md" mb="xl">
-      <Paper p="md" withBorder radius="md">
-        <Group justify="space-between" mb="md">
-          <Group gap="xs">
-            <Settings size={16} />
-            <Text size="sm" fw={500}>Settings</Text>
-          </Group>
-          <Group gap="xs">
-            {onRegenerateAll && (
+      <Paper p="lg" withBorder radius="md" bg="gray.0">
+        <Stack gap="sm">
+          <Group justify="space-between" align="start">
+            <div>
+              <Group gap="xs" mb={4}>
+                <Settings size={18} />
+                <Text size="lg" fw={700}>
+                  Global Settings
+                </Text>
+                <Badge variant="light" color="blue" size="sm">
+                  All Images
+                </Badge>
+              </Group>
+              <Text size="xs" c="dimmed" mb="md">
+                These settings apply to all images by default. Customize individual images using the ⚙️ button on each card above.
+              </Text>
+            </div>
+            <Group gap="xs">
+              {onRegenerateAll && (
+                <Button
+                  variant="light"
+                  color="red"
+                  size="sm"
+                  leftSection={<RefreshCw size={14} />}
+                  onClick={onRegenerateAll}
+                >
+                  Regenerate All
+                </Button>
+              )}
               <Button
-                variant="light"
-                color="red"
-                size="xs"
-                leftSection={<RefreshCw size={14} />}
-                onClick={onRegenerateAll}
+                variant="filled"
+                color="gray"
+                size="sm"
+                leftSection={<ChevronUp size={16} />}
+                onClick={() => setCollapsed(true)}
               >
-                Regenerate All
+                Collapse
               </Button>
-            )}
-            <Button
-              variant="subtle"
-              color="gray"
-              size="xs"
-              leftSection={<X size={14} />}
-              onClick={onClear}
-            >
-              Clear all
-            </Button>
+            </Group>
           </Group>
-        </Group>
+        </Stack>
 
         {/* Current Preset & Settings Display */}
-        <Paper p="md" radius="sm" withBorder bg="red.0" mb="md">
+        <Paper p="md" radius="md" withBorder bg="white" mb="md" mt="md">
           <Stack gap="sm">
             <Group justify="space-between" align="start">
               <div style={{ flex: 1 }}>
@@ -269,7 +361,7 @@ export function ProcessingControls({
                           description="Leave empty for no limit"
                         />
                       </Group>
-                      <Paper p="xs" radius="sm" withBorder bg="yellow.0">
+                      <Paper p="xs" radius="md" withBorder bg="yellow.0">
                         <Text size="xs" c="dimmed">
                           💡 <Text span fw={500}>Tip:</Text> Set either width OR height for best results. The image will scale to your specified dimension while maintaining aspect ratio. Setting both may result in unexpected sizes.
                         </Text>
@@ -360,7 +452,7 @@ export function ProcessingControls({
 
                   {settings.resizeMode === 'percentage' && (
                     <Stack gap="md">
-                      <Paper p="md" radius="sm" withBorder>
+                      <Paper p="md" radius="md" withBorder>
                         <Stack gap="sm">
                           <Group justify="space-between">
                             <Text size="sm" fw={500}>
