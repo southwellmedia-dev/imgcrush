@@ -1,0 +1,102 @@
+import React, { useState } from 'react';
+import { Card, Text, Group, Stack, Badge, SimpleGrid, Button } from '@mantine/core';
+import { Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { COMPRESSION_PRESETS, CompressionPreset } from '../../presets/compressionPresets';
+
+interface PresetSelectorProps {
+  selectedPreset: string;
+  onPresetChange: (presetId: string) => void;
+}
+
+export function PresetSelector({ selectedPreset, onPresetChange }: PresetSelectorProps) {
+  const [showAll, setShowAll] = useState(false);
+
+  // Define which presets to show initially
+  const primaryPresets = ['compression-only', 'web-optimized', 'high-quality', 'custom'];
+  const primaryPresetObjects = COMPRESSION_PRESETS.filter(p => primaryPresets.includes(p.id));
+  const additionalPresets = COMPRESSION_PRESETS.filter(p => !primaryPresets.includes(p.id));
+
+  const presetsToShow = showAll ? COMPRESSION_PRESETS : primaryPresetObjects;
+
+  return (
+    <Stack gap="md">
+      <Text size="sm" fw={600} c="gray.7">Choose a compression preset</Text>
+
+      <SimpleGrid cols={{ base: 1, sm: 2, md: showAll ? 3 : 2, lg: 4 }} spacing="sm">
+        {presetsToShow.map((preset) => (
+          <Card
+            key={preset.id}
+            padding="md"
+            radius="md"
+            withBorder
+            className="hover:shadow-md"
+            style={{
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              borderColor: selectedPreset === preset.id ? '#e11d48' : '#e5e7eb',
+              backgroundColor: selectedPreset === preset.id ? '#fff1f2' : 'white',
+              borderWidth: selectedPreset === preset.id ? '2px' : '1px',
+              transform: selectedPreset === preset.id ? 'scale(1.02)' : 'scale(1)',
+            }}
+            onClick={() => onPresetChange(preset.id)}
+          >
+            <Stack gap="xs">
+              <Group justify="space-between" align="start">
+                <Text size="xl">{preset.icon}</Text>
+                {selectedPreset === preset.id ? (
+                  <Badge size="sm" color="red" variant="filled" leftSection={<Check size={12} />}>
+                    Selected
+                  </Badge>
+                ) : preset.badge ? (
+                  <Badge size="xs" color="red" variant="light">
+                    {preset.badge}
+                  </Badge>
+                ) : null}
+              </Group>
+
+              <Text size="sm" fw={600}>{preset.name}</Text>
+              <Text size="xs" c="dimmed" lineClamp={2}>
+                {preset.description}
+              </Text>
+
+              {preset.recommended && preset.recommended.length > 0 && (
+                <Group gap={4}>
+                  <Text size="xs" c="dimmed">Best for:</Text>
+                  <Text size="xs" c="gray.7">
+                    {preset.recommended.slice(0, 2).join(', ')}
+                  </Text>
+                </Group>
+              )}
+            </Stack>
+          </Card>
+        ))}
+      </SimpleGrid>
+
+      {/* Load More Button - only show if there are additional presets and not showing all */}
+      {additionalPresets.length > 0 && (
+        <div style={{ textAlign: 'center', marginTop: '8px' }}>
+          <Button
+            variant="subtle"
+            size="sm"
+            onClick={() => setShowAll(!showAll)}
+            leftSection={showAll ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            style={{ transition: 'all 0.2s ease' }}
+          >
+            {showAll ? 'Show Less' : `Show ${additionalPresets.length} More Options`}
+          </Button>
+        </div>
+      )}
+
+      {selectedPreset === 'custom' && (
+        <Card padding="sm" radius="md" bg="yellow.0" withBorder>
+          <Group gap="xs">
+            <Text size="xs">💡</Text>
+            <Text size="xs" c="dimmed">
+              Custom settings let you fine-tune all parameters after uploading images
+            </Text>
+          </Group>
+        </Card>
+      )}
+    </Stack>
+  );
+}
