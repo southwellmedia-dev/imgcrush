@@ -169,15 +169,21 @@ export function ImageCard({ image, onRemove, onRegenerate, globalSettings, onUpd
                     <Maximize2 size={14} />
                     <Text size="xs" c="dimmed">Dimensions</Text>
                   </Group>
-                  <Group gap="xs">
-                    <Text size="xs">
-                      {originalDimensions.width}×{originalDimensions.height}
-                    </Text>
-                    <ArrowRight size={12} />
-                    <Text size="xs" fw={600} c={dimensionsChanged ? "red" : "gray"}>
+                  {dimensionsChanged ? (
+                    <Group gap="xs">
+                      <Text size="xs">
+                        {originalDimensions.width}×{originalDimensions.height}
+                      </Text>
+                      <ArrowRight size={12} />
+                      <Text size="xs" fw={600} c="red">
+                        {processedDimensions.width}×{processedDimensions.height}
+                      </Text>
+                    </Group>
+                  ) : (
+                    <Text size="xs" fw={600}>
                       {processedDimensions.width}×{processedDimensions.height}
                     </Text>
-                  </Group>
+                  )}
                 </Group>
               )}
 
@@ -195,7 +201,7 @@ export function ImageCard({ image, onRemove, onRegenerate, globalSettings, onUpd
               {/* Progress bar - only show for successful compression */}
               {!fileSizeIncreased && (
                 <Progress
-                  value={100 - compressionRatio}
+                  value={compressionRatio}
                   color="green"
                   size="xs"
                   radius="xl"

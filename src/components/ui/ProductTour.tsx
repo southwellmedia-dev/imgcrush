@@ -114,14 +114,16 @@ export function ProductTour({ hasImages, onStart, onComplete }: ProductTourProps
     driverObj.drive();
   };
 
-  // Expose restart function globally for manual trigger
+  // Expose restart function globally for manual trigger (development only)
   useEffect(() => {
-    (window as any).restartImgCrushTour = () => {
-      localStorage.removeItem('imgcrush_tour_completed');
-      if (hasImages) {
-        startTour();
-      }
-    };
+    if (process.env.NODE_ENV === 'development') {
+      (window as any).restartImgCrushTour = () => {
+        localStorage.removeItem('imgcrush_tour_completed');
+        if (hasImages) {
+          startTour();
+        }
+      };
+    }
   }, [hasImages]);
 
   return null; // No UI, just tour logic

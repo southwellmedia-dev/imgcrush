@@ -209,7 +209,11 @@ export function ImageSettingsModal({
                   label="Format"
                   size="xs"
                   value={settings.format}
-                  onChange={(value) => updateSetting('format', value as any)}
+                  onChange={(value) => {
+                    if (value === 'jpeg' || value === 'png' || value === 'webp') {
+                      updateSetting('format', value);
+                    }
+                  }}
                   data={[
                     { value: 'jpeg', label: 'JPEG' },
                     { value: 'png', label: 'PNG' },
@@ -224,7 +228,11 @@ export function ImageSettingsModal({
                   label="Resize Mode"
                   size="xs"
                   value={settings.resizeMode}
-                  onChange={(value) => updateSetting('resizeMode', value as any)}
+                  onChange={(value) => {
+                    if (value === 'percentage' || value === 'max-dimensions' || value === 'exact') {
+                      updateSetting('resizeMode', value);
+                    }
+                  }}
                   data={[
                     { value: 'percentage', label: 'Scale (%)' },
                     { value: 'max-dimensions', label: 'Fit to Size' },

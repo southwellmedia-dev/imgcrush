@@ -69,7 +69,7 @@ ImgCrush is a **privacy-first, client-side image compression and optimization to
 
 ### UI Libraries
 
-- **Mantine UI v7** (`@mantine/core`): Primary component library
+- **Mantine UI v8** (`@mantine/core`): Primary component library
   - Pre-built accessible components
   - Theming system (customized to red color scheme)
   - Form components, modals, buttons, etc.
@@ -820,7 +820,7 @@ interface Processor {
 
 **isEnabled Logic:**
 ```typescript
-isEnabled(settings: any): boolean {
+isEnabled(settings: ProcessingSettings): boolean {
   // Skip if percentage is 100%
   if (settings.resizeMode === 'percentage' && settings.percentage === 100) {
     return false;
@@ -980,12 +980,15 @@ Example:
 
 #### Adding Files
 ```typescript
+// Simple counter for unique IDs (better than Math.random for guaranteeing uniqueness)
+let imageIdCounter = 0;
+
 const handleFilesSelected = useCallback((newFiles: File[]) => {
   setFiles((prev) => [...prev, ...newFiles]);
   setProcessedImages((prev) => [
     ...prev,
     ...newFiles.map((file) => ({
-      id: Math.random().toString(36),
+      id: `img-${Date.now()}-${imageIdCounter++}`, // Guaranteed unique ID
       originalFile: file,
       originalSize: file.size,
       processedBlob: null,
@@ -996,6 +999,8 @@ const handleFilesSelected = useCallback((newFiles: File[]) => {
   ]);
 }, []);
 ```
+
+> **Note:** Using `Date.now()` + counter ensures unique IDs even when processing many files at once. Alternatives include the `nanoid` library for cryptographically secure random IDs, or `crypto.randomUUID()` for UUID v4 generation.
 
 #### Changing Preset
 ```typescript
@@ -1166,7 +1171,7 @@ import { Processor, ProcessingContext } from '../types';
 export class MyProcessor implements Processor {
   name = 'MyProcessor';
 
-  isEnabled(settings: any): boolean {
+  isEnabled(settings: ProcessingSettings): boolean {
     // Return true if this processor should run
     return settings.myFeature === true;
   }

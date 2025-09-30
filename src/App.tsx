@@ -5,7 +5,7 @@ import { ProcessingControls } from "./components/features/ProcessingControls";
 import { ResultsHeader, ViewMode } from "./components/ui/ResultsHeader";
 import { Footer } from "./components/ui/Footer";
 import { ProductTour } from "./components/ui/ProductTour";
-import { ProcessedImage } from "./types";
+import { ProcessedImage, ProcessingSettings } from "./types";
 import { applyPreset } from "./presets/compressionPresets";
 
 function App() {
@@ -56,8 +56,10 @@ function App() {
   );
 
   const handleClearAll = useCallback(() => {
-    setFiles([]);
-    setProcessedImages([]);
+    if (window.confirm('Remove all images and start over?')) {
+      setFiles([]);
+      setProcessedImages([]);
+    }
   }, []);
 
   const handlePresetChange = useCallback((presetId: string) => {
@@ -109,7 +111,7 @@ function App() {
     }
   }, []);
 
-  const handleUpdateImageSettings = useCallback((imageId: string, settings: any) => {
+  const handleUpdateImageSettings = useCallback((imageId: string, settings: ProcessingSettings) => {
     setProcessedImages((prev) =>
       prev.map((img) =>
         img.id === imageId
@@ -126,7 +128,7 @@ function App() {
     );
   }, []);
 
-  const handleApplySettingsToAll = useCallback((settings: any) => {
+  const handleApplySettingsToAll = useCallback((settings: ProcessingSettings) => {
     // Apply settings to all images and trigger reprocessing
     setProcessedImages((prev) =>
       prev.map((img) => ({
@@ -186,6 +188,7 @@ function App() {
                   onCustomize={handleScrollToCustomize}
                   onUpdateImageSettings={handleUpdateImageSettings}
                   onApplyToAll={handleApplySettingsToAll}
+                  onClearAll={handleClearAll}
                   viewMode={viewMode}
                 />
 

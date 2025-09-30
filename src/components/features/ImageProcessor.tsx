@@ -16,6 +16,7 @@ interface ImageProcessorProps {
   onCustomize?: () => void;
   onUpdateImageSettings?: (imageId: string, settings: ProcessingSettings) => void;
   onApplyToAll?: (settings: ProcessingSettings) => void;
+  onClearAll?: () => void;
   viewMode?: ViewMode;
 }
 
@@ -28,6 +29,7 @@ export function ImageProcessor({
   onCustomize,
   onUpdateImageSettings,
   onApplyToAll,
+  onClearAll,
   viewMode = 'grid'
 }: ImageProcessorProps) {
   const regenerateImage = async (imageId: string) => {
@@ -132,12 +134,7 @@ export function ImageProcessor({
       )}
 
       {/* Batch download */}
-      <DownloadAll images={images} onCustomize={onCustomize} onClearAll={() => {
-        // Clear all will be handled by parent
-        if (window.confirm('Remove all images and start over?')) {
-          images.forEach(img => onRemoveImage(img.id));
-        }
-      }} />
+      <DownloadAll images={images} onClearAll={onClearAll} />
     </div>
   );
 }

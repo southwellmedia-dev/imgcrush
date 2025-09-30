@@ -7,11 +7,10 @@ import { formatFileSize } from '../../utils/fileUtils';
 
 interface DownloadAllProps {
   images: ProcessedImage[];
-  onCustomize?: () => void;
   onClearAll?: () => void;
 }
 
-export function DownloadAll({ images, onCustomize, onClearAll }: DownloadAllProps) {
+export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
   const handleDownloadAll = async () => {
     const zip = new JSZip();
 
