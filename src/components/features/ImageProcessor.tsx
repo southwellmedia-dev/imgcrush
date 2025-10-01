@@ -110,6 +110,7 @@ interface ImageProcessorProps {
   onClearAll?: () => void;
   onReorderImages?: (images: ProcessedImage[]) => void;
   onUpdateFileName?: (imageId: string, fileName: string) => void;
+  onBulkRename?: (renamedFiles: Map<string, string>) => void;
   viewMode?: ViewMode;
 }
 
@@ -125,6 +126,7 @@ export function ImageProcessor({
   onClearAll,
   onReorderImages,
   onUpdateFileName,
+  onBulkRename,
   viewMode = "grid",
 }: ImageProcessorProps) {
   // Setup drag and drop sensors
@@ -270,7 +272,7 @@ export function ImageProcessor({
       )}
 
       {/* Batch download */}
-      <DownloadAll images={images} onClearAll={onClearAll} />
+      <DownloadAll images={images} onBulkRename={onBulkRename} />
     </div>
   );
 }

@@ -285,12 +285,30 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
             </ActionIcon>
           </Group>
         ) : (
-          <Group gap="xs" align="center">
+          <Group gap="xs" align="center" wrap="nowrap">
             <Text size="sm" fw={500} style={{ wordBreak: 'break-word', flex: 1 }}>
               {image.customFileName
-                ? `${image.customFileName}${splitFileName(image.originalFile.name).ext}`
-                : image.originalFile.name}
+                ? image.customFileName
+                : splitFileName(image.originalFile.name).base}
             </Text>
+            {image.outputFormat && (
+              <Tooltip
+                label={
+                  <>
+                    <Text size="xs" fw={600}>Export Format</Text>
+                    <Text size="xs" c="dimmed">
+                      Converted from: {splitFileName(image.originalFile.name).ext.replace('.', '').toUpperCase() || 'Unknown'}
+                    </Text>
+                  </>
+                }
+                withArrow
+                position="top"
+              >
+                <Badge size="sm" variant="light" color="blue" style={{ textTransform: 'uppercase', cursor: 'help' }}>
+                  {image.outputFormat === 'jpeg' ? 'JPG' : image.outputFormat}
+                </Badge>
+              </Tooltip>
+            )}
             <Tooltip label="Edit filename">
               <ActionIcon
                 variant="subtle"

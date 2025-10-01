@@ -44,7 +44,41 @@ const theme = createTheme({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <MantineProvider theme={theme} defaultColorScheme={loadDarkMode() ? 'dark' : 'light'}>
-      <Notifications position="top-right" />
+      <Notifications
+        position="bottom-right"
+        styles={{
+          notification: {
+            '&[data-color="green"]': {
+              backgroundColor: '#10b981',
+              color: 'white',
+              border: 'none',
+              '& .mantine-Notification-title': { color: 'white' },
+              '& .mantine-Notification-description': { color: 'white' },
+            },
+            '&[data-color="red"]': {
+              backgroundColor: '#ef4444',
+              color: 'white',
+              border: 'none',
+              '& .mantine-Notification-title': { color: 'white' },
+              '& .mantine-Notification-description': { color: 'white' },
+            },
+            '&[data-color="yellow"]': {
+              backgroundColor: '#f59e0b',
+              color: 'white',
+              border: 'none',
+              '& .mantine-Notification-title': { color: 'white' },
+              '& .mantine-Notification-description': { color: 'white' },
+            },
+            '&[data-color="blue"]': {
+              backgroundColor: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              '& .mantine-Notification-title': { color: 'white' },
+              '& .mantine-Notification-description': { color: 'white' },
+            },
+          },
+        }}
+      />
       <App />
     </MantineProvider>
   </StrictMode>

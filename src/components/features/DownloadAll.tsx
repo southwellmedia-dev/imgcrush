@@ -1,5 +1,6 @@
 // React import not required with new JSX transform
-import { Download, Package, TrendingDown, Check, Trash2, Sparkles, Archive, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+import { Download, Package, TrendingDown, Check, Trash2, Sparkles, Archive, CheckCircle2, Edit2 } from "lucide-react";
 import {
   Paper,
   Group,
@@ -12,13 +13,15 @@ import {
 import JSZip from "jszip";
 import { ProcessedImage } from "../../types";
 import { formatFileSize } from "../../utils/fileUtils";
+import { BulkRenameModal } from "./BulkRenameModal";
 
 interface DownloadAllProps {
   images: ProcessedImage[];
-  onClearAll?: () => void;
+  onBulkRename?: (renamedFiles: Map<string, string>) => void;
 }
 
-export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
+export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
+  const [showRenameModal, setShowRenameModal] = useState(false);
   const handleDownloadAll = async () => {
     const zip = new JSZip();
 
@@ -95,20 +98,20 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
         <Group justify="space-between" align="flex-start" wrap="wrap">
           <Stack gap={4}>
             <Group gap="xs">
-              <CheckCircle2 size={22} color="#10b981" strokeWidth={2.5} />
+              <Archive size={22} color="var(--mantine-color-red-6)" strokeWidth={2.5} />
               <Text size="xl" fw={700} style={{ color: "var(--color-text-primary)" }}>
-                {processedImages.length} {processedImages.length === 1 ? "Image" : "Images"} Ready
+                Export Center
               </Text>
             </Group>
             <Text size="sm" c="dimmed">
-              All images have been optimized successfully
+              {processedImages.length} {processedImages.length === 1 ? "image" : "images"} ready to download
             </Text>
           </Stack>
           <Badge
             size="lg"
             variant="light"
             color="green"
-            leftSection={<Package size={16} />}
+            leftSection={<CheckCircle2 size={16} />}
           >
             {processedImages.length} {processedImages.length === 1 ? "file" : "files"}
           </Badge>
@@ -198,21 +201,23 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
 
         {/* Action Buttons */}
         <Group justify="space-between" wrap="wrap" gap="md">
-          {onClearAll && (
+          {/* Left: Rename All button */}
+          {onBulkRename && (
             <Button
               size="md"
-              leftSection={<Trash2 size={18} />}
-              onClick={onClearAll}
+              leftSection={<Edit2 size={18} />}
+              onClick={() => setShowRenameModal(true)}
               variant="light"
-              color="gray"
+              color="blue"
             >
-              Clear All
+              Rename All
             </Button>
           )}
+          {/* Right: Download button */}
           <Button
             size="md"
             leftSection={<Download size={20} />}
-            rightSection={<Archive size={16} />}
+            rightSection={<Package size={16} />}
             onClick={handleDownloadAll}
             color="red"
             variant="filled"
@@ -222,6 +227,16 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
           </Button>
         </Group>
       </Stack>
+
+      {/* Bulk Rename Modal */}
+      {onBulkRename && (
+        <BulkRenameModal
+          opened={showRenameModal}
+          onClose={() => setShowRenameModal(false)}
+          images={processedImages}
+          onApply={onBulkRename}
+        />
+      )}
     </Paper>
   );
 }
