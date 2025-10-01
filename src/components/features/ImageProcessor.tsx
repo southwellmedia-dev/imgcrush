@@ -272,7 +272,7 @@ export function ImageProcessor({
       )}
 
       {/* Batch download */}
-      <DownloadAll images={images} onClearAll={onClearAll} onBulkRename={onBulkRename} />
+      <DownloadAll images={images} onBulkRename={onBulkRename} />
     </div>
   );
 }

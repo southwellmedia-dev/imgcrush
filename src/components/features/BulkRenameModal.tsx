@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useDeferredValue } from 'react';
 import {
   Modal,
   Stack,
@@ -13,7 +13,7 @@ import {
   Code,
 } from '@mantine/core';
 import { Edit2, Check, FileText } from 'lucide-react';
-import { NAMING_FORMATS, generatePreview, bulkRename } from '../../utils/namingFormats';
+import { NAMING_FORMATS, generatePreview, bulkRename, NamingFormatId } from '../../utils/namingFormats';
 import { ProcessedImage } from '../../types';
 
 interface BulkRenameModalProps {
@@ -24,10 +24,13 @@ interface BulkRenameModalProps {
 }
 
 export function BulkRenameModal({ opened, onClose, images, onApply }: BulkRenameModalProps) {
-  const [selectedFormat, setSelectedFormat] = useState<string>('sequential');
+  const [selectedFormat, setSelectedFormat] = useState<NamingFormatId>('sequential');
   const [customPrefix, setCustomPrefix] = useState<string>('');
   const [startNumber, setStartNumber] = useState<number>(1);
   const [preview, setPreview] = useState<string[]>([]);
+
+  // Debounce customPrefix to avoid recalculating preview on every keystroke
+  const deferredPrefix = useDeferredValue(customPrefix);
 
   // Get current format
   const currentFormat = NAMING_FORMATS.find((f) => f.id === selectedFormat);
@@ -41,18 +44,18 @@ export function BulkRenameModal({ opened, onClose, images, onApply }: BulkRename
     [images]
   );
 
-  // Update preview whenever settings change
+  // Update preview whenever settings change (using deferred prefix for debouncing)
   useEffect(() => {
     if (!opened) return;
 
     const previewNames = generatePreview(selectedFormat, imageData, {
-      prefix: customPrefix,
+      prefix: deferredPrefix,
       startNumber,
       previewCount: 3,
     });
 
     setPreview(previewNames);
-  }, [opened, selectedFormat, customPrefix, startNumber, imageData]);
+  }, [opened, selectedFormat, deferredPrefix, startNumber, imageData]);
 
   const handleApply = () => {
     const imageDataWithIds = images.map((img) => ({

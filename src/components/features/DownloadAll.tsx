@@ -17,11 +17,10 @@ import { BulkRenameModal } from "./BulkRenameModal";
 
 interface DownloadAllProps {
   images: ProcessedImage[];
-  onClearAll?: () => void;
   onBulkRename?: (renamedFiles: Map<string, string>) => void;
 }
 
-export function DownloadAll({ images, onClearAll, onBulkRename }: DownloadAllProps) {
+export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
   const [showRenameModal, setShowRenameModal] = useState(false);
   const handleDownloadAll = async () => {
     const zip = new JSZip();

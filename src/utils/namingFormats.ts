@@ -11,8 +11,10 @@ export interface NamingFormatParams {
   startNumber?: number;
 }
 
+export type NamingFormatId = 'sequential' | 'custom-prefix' | 'date-sequential' | 'preserve-suffix';
+
 export interface NamingFormat {
-  id: 'sequential' | 'custom-prefix' | 'date-sequential' | 'preserve-suffix';
+  id: NamingFormatId;
   name: string;
   description: string;
   requiresPrefix: boolean;
@@ -38,12 +40,43 @@ function getExtension(format: string): string {
 }
 
 /**
- * Strip extension from filename
+ * Strip extension from filename (handles dot-files correctly)
  */
 function stripExtension(filename: string): string {
   const lastDot = filename.lastIndexOf('.');
+  // Handle dot-files (e.g., .gitignore) - don't strip if dot is at start
   if (lastDot <= 0) return filename;
+  // Handle files like .config.json - strip extension but keep leading dot
   return filename.substring(0, lastDot);
+}
+
+/**
+ * Reserved Windows filenames that should be avoided
+ */
+const RESERVED_NAMES = new Set([
+  'CON', 'PRN', 'AUX', 'NUL',
+  'COM1', 'COM2', 'COM3', 'COM4', 'COM5', 'COM6', 'COM7', 'COM8', 'COM9',
+  'LPT1', 'LPT2', 'LPT3', 'LPT4', 'LPT5', 'LPT6', 'LPT7', 'LPT8', 'LPT9'
+]);
+
+/**
+ * Check if filename is a reserved Windows name
+ */
+function isReservedName(filename: string): boolean {
+  const nameWithoutExt = stripExtension(filename).toUpperCase();
+  return RESERVED_NAMES.has(nameWithoutExt);
+}
+
+/**
+ * Sanitize filename to avoid reserved names
+ */
+function sanitizeReservedName(filename: string): string {
+  if (isReservedName(filename)) {
+    const ext = filename.includes('.') ? filename.substring(filename.lastIndexOf('.')) : '';
+    const base = stripExtension(filename);
+    return `${base}_file${ext}`;
+  }
+  return filename;
 }
 
 /**
@@ -79,7 +112,8 @@ export const NAMING_FORMATS: NamingFormat[] = [
       const number = startNumber + index;
       const paddedNumber = padNumber(number, totalCount + startNumber - 1);
       const ext = getExtension(outputFormat);
-      return `image_${paddedNumber}${ext}`;
+      const filename = `image_${paddedNumber}${ext}`;
+      return sanitizeReservedName(filename);
     },
   },
   {
@@ -94,7 +128,8 @@ export const NAMING_FORMATS: NamingFormat[] = [
       const ext = getExtension(outputFormat);
       // Sanitize prefix (remove invalid characters, preserve Unicode letters/numbers)
       const sanitizedPrefix = prefix.replace(/[^\p{L}\p{N}_-]/gu, '_');
-      return `${sanitizedPrefix}_${paddedNumber}${ext}`;
+      const filename = `${sanitizedPrefix}_${paddedNumber}${ext}`;
+      return sanitizeReservedName(filename);
     },
   },
   {
@@ -108,7 +143,8 @@ export const NAMING_FORMATS: NamingFormat[] = [
       const paddedNumber = padNumber(number, totalCount + startNumber - 1);
       const ext = getExtension(outputFormat);
       const date = getCurrentDate();
-      return `img-${date}_${paddedNumber}${ext}`;
+      const filename = `img-${date}_${paddedNumber}${ext}`;
+      return sanitizeReservedName(filename);
     },
   },
   {
@@ -122,7 +158,8 @@ export const NAMING_FORMATS: NamingFormat[] = [
       const ext = getExtension(outputFormat);
       const number = startNumber + index;
       const paddedNumber = padNumber(number, totalCount + startNumber - 1);
-      return `${baseName}_optimized_${paddedNumber}${ext}`;
+      const filename = `${baseName}_optimized_${paddedNumber}${ext}`;
+      return sanitizeReservedName(filename);
     },
   },
 ];
@@ -130,7 +167,7 @@ export const NAMING_FORMATS: NamingFormat[] = [
 /**
  * Get naming format by ID
  */
-export function getNamingFormatById(id: string): NamingFormat | undefined {
+export function getNamingFormatById(id: NamingFormatId): NamingFormat | undefined {
   return NAMING_FORMATS.find((format) => format.id === id);
 }
 
