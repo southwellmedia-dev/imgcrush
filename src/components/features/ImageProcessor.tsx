@@ -16,10 +16,10 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { motion } from "framer-motion";
 import { GripVertical } from "lucide-react";
 import { ImageCard } from "./ImageCard";
 import { ImageTableView } from "./ImageTableView";
-import { DownloadAll } from "./DownloadAll";
 import { ImageUpload } from "./ImageUpload";
 import { ProcessedImage, ProcessingSettings } from "../../types";
 import { processImage } from "../../utils/imageProcessor";
@@ -209,11 +209,11 @@ export function ImageProcessor({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
       {/* Conditional rendering based on view mode */}
       {viewMode === "grid" ? (
         <>
-          {/* Grid View with Drag and Drop */}
+          {/* Grid View with Drag and Drop - Enhanced spacing */}
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -223,8 +223,14 @@ export function ImageProcessor({
               items={images.map((img) => img.id)}
               strategy={rectSortingStrategy}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ gap: '16px' }}>
-                {images.map((image) => (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${Math.min(images.length, 4)}, 1fr)`,
+                  gap: '24px',
+                }}
+              >
+                {images.map((image, index) => (
                   <SortableImageCard
                     key={image.id}
                     image={image}
@@ -237,16 +243,6 @@ export function ImageProcessor({
                     onUpdateFileName={onUpdateFileName}
                   />
                 ))}
-
-                {/* Add more images - fills remaining columns with full height */}
-                {onFilesSelected && (
-                  <div style={dropZoneStyle} className="h-full">
-                    <ImageUpload
-                      onFilesSelected={onFilesSelected}
-                      minimal={false}
-                    />
-                  </div>
-                )}
               </div>
             </SortableContext>
           </DndContext>
@@ -270,9 +266,6 @@ export function ImageProcessor({
           )}
         </>
       )}
-
-      {/* Batch download */}
-      <DownloadAll images={images} onBulkRename={onBulkRename} />
     </div>
   );
 }

@@ -1,14 +1,19 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { ImageUpload } from "./components/features/ImageUpload";
 import { ImageProcessor } from "./components/features/ImageProcessor";
-import { ProcessingControls } from "./components/features/ProcessingControls";
-import { ResultsHeader, ViewMode } from "./components/ui/ResultsHeader";
-import { Footer } from "./components/ui/Footer";
+import { Sidebar } from "./components/ui/Sidebar";
+import { ResultsAreaHeader } from "./components/ui/ResultsAreaHeader";
+import { BulkRenameCallout } from "./components/ui/BulkRenameCallout";
+import { BulkRenameModal } from "./components/features/BulkRenameModal";
+import { AddImagesModal } from "./components/modals/AddImagesModal";
+import { GlobalSettingsModal } from "./components/modals/GlobalSettingsModal";
+import { ViewMode } from "./components/ui/ResultsHeader";
 import { ProductTour } from "./components/ui/ProductTour";
 import { ProcessedImage, ProcessingSettings } from "./types";
 import { applyPreset } from "./presets/compressionPresets";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { notifications } from "@mantine/notifications";
+import JSZip from "jszip";
 import {
   loadSelectedPreset,
   loadProcessingSettings,
@@ -28,6 +33,10 @@ function App() {
   const [viewMode, setViewMode] = useState<ViewMode>(
     () => loadViewMode() || 'grid'
   );
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [addImagesModalOpen, setAddImagesModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [bulkRenameModalOpen, setBulkRenameModalOpen] = useState(false);
   const [processingSettings, setProcessingSettings] = useState<ProcessingSettings>(
     () => loadProcessingSettings() || DEFAULT_PROCESSING_SETTINGS
   );
@@ -143,6 +152,60 @@ function App() {
       settingsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, []);
+
+  const handleDownloadAll = useCallback(async () => {
+    const processedImagesOnly = processedImages.filter(
+      (img) => img.processed && img.processedBlob
+    );
+
+    if (processedImagesOnly.length === 0) {
+      notifications.show({
+        title: 'No images ready',
+        message: 'Please wait for images to finish processing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    try {
+      const zip = new JSZip();
+
+      processedImagesOnly.forEach((image) => {
+        if (image.processedBlob) {
+          const originalName = image.originalFile.name;
+          const lastDot = originalName.lastIndexOf('.');
+          const baseName = lastDot > 0 ? originalName.substring(0, lastDot) : originalName;
+          const extension = lastDot > 0 ? originalName.substring(lastDot) : '';
+          const fileName = image.customFileName
+            ? `${image.customFileName}${extension}`
+            : `compressed_${baseName}${extension}`;
+          zip.file(fileName, image.processedBlob);
+        }
+      });
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `imgcrush_${Date.now()}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      notifications.show({
+        title: 'Download started',
+        message: `Downloading ${processedImagesOnly.length} compressed images`,
+        color: 'green',
+      });
+    } catch (error) {
+      notifications.show({
+        title: 'Download failed',
+        message: 'Failed to create ZIP file',
+        color: 'red',
+      });
+    }
+  }, [processedImages]);
 
   const handleUpdateImageSettings = useCallback((imageId: string, settings: ProcessingSettings) => {
     setProcessedImages((prev) =>
@@ -297,16 +360,63 @@ function App() {
   const hasImages = processedImages.length > 0;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--mantine-color-body)' }}>
+    <div className="min-h-screen bg-gradient-mesh-animated" style={{ display: 'flex' }}>
       {/* Product Tour - Enabled */}
       <ProductTour hasImages={hasImages} />
 
-      <main className="flex-1">
+      {/* Sidebar Navigation - Always visible */}
+      <Sidebar
+        onReset={handleClearAll}
+        hasImages={hasImages}
+        onCollapsedChange={setSidebarCollapsed}
+        onOpenSettings={() => setSettingsModalOpen(true)}
+        onOpenBulkRename={() => setBulkRenameModalOpen(true)}
+        onDownloadZip={handleDownloadAll}
+        images={processedImages}
+      />
+
+      {/* Modals */}
+      <AddImagesModal
+        opened={addImagesModalOpen}
+        onClose={() => setAddImagesModalOpen(false)}
+        onFilesSelected={handleFilesSelected}
+        selectedPreset={selectedPreset}
+        onPresetChange={handlePresetChange}
+        settings={processingSettings}
+        onSettingsChange={setProcessingSettings}
+      />
+
+      <GlobalSettingsModal
+        opened={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        settings={processingSettings}
+        onSettingsChange={setProcessingSettings}
+        selectedPreset={selectedPreset}
+        onPresetChange={handlePresetChange}
+        onRegenerateAll={regenerateAllImages}
+      />
+
+      <BulkRenameModal
+        opened={bulkRenameModalOpen}
+        onClose={() => setBulkRenameModalOpen(false)}
+        images={processedImages.filter(img => img.processed)}
+        onApply={handleBulkRename}
+      />
+
+      {/* Main Content Area - Responsive to sidebar state */}
+      <main style={{
+        marginLeft: sidebarCollapsed ? '80px' : '240px',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        transition: 'margin-left 0.3s ease'
+      }}>
         {!hasImages ? (
           <>
-            {/* Initial centered upload state */}
-            <div className="container mx-auto px-4">
-              <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] py-12">
+            {/* Initial centered upload state - Full width */}
+            <div className="container mx-auto px-8" style={{ maxWidth: '1400px', flex: 1 }}>
+              <div className="flex flex-col items-center justify-center" style={{ minHeight: 'calc(100vh - 120px)', paddingTop: '48px', paddingBottom: '48px' }}>
                 <ImageUpload
                   onFilesSelected={handleFilesSelected}
                   minimal={true}
@@ -319,48 +429,42 @@ function App() {
             </div>
           </>
         ) : (
-          // Processing view with images
-          <>
-            <ResultsHeader
-              onReset={handleClearAll}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-            />
-            <div className="container mx-auto px-4 py-8">
-              <div className="max-w-7xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                <ImageProcessor
-                  images={processedImages}
-                  settings={processingSettings}
-                  onRemoveImage={handleRemoveFile}
-                  onUpdateImage={updateProcessedImage}
-                  onFilesSelected={handleFilesSelected}
-                  onCustomize={handleScrollToCustomize}
-                  onUpdateImageSettings={handleUpdateImageSettings}
-                  onApplyToAll={handleApplySettingsToAll}
-                  onClearAll={handleClearAll}
-                  onReorderImages={handleReorderImages}
-                  onUpdateFileName={handleUpdateFileName}
-                  onBulkRename={handleBulkRename}
-                  viewMode={viewMode}
-                />
+          // Processing view with images - With sidebar
+          <div className="container mx-auto px-8 py-8" style={{ maxWidth: '1600px', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Results Area Header */}
+              <ResultsAreaHeader
+                images={processedImages}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                onDownloadAll={handleDownloadAll}
+                onAddImages={() => setAddImagesModalOpen(true)}
+              />
 
-                <div id="settings-section" className="pt-8 border-t" style={{ borderColor: 'var(--color-border-primary)' }}>
-                  <ProcessingControls
-                    settings={processingSettings}
-                    onSettingsChange={setProcessingSettings}
-                    onClear={handleClearAll}
-                    selectedPreset={selectedPreset}
-                    onPresetChange={handlePresetChange}
-                    onRegenerateAll={regenerateAllImages}
-                  />
-                </div>
-              </div>
+              {/* Bulk Rename Callout Banner */}
+              <BulkRenameCallout
+                imageCount={processedImages.length}
+                onOpenRename={() => setBulkRenameModalOpen(true)}
+              />
+
+              <ImageProcessor
+                images={processedImages}
+                settings={processingSettings}
+                onRemoveImage={handleRemoveFile}
+                onUpdateImage={updateProcessedImage}
+                onCustomize={handleScrollToCustomize}
+                onUpdateImageSettings={handleUpdateImageSettings}
+                onApplyToAll={handleApplySettingsToAll}
+                onClearAll={handleClearAll}
+                onReorderImages={handleReorderImages}
+                onUpdateFileName={handleUpdateFileName}
+                onBulkRename={handleBulkRename}
+                viewMode={viewMode}
+              />
             </div>
-          </>
+          </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }

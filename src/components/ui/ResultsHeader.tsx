@@ -21,86 +21,121 @@ export function ResultsHeader({ onReset, viewMode = 'grid', onViewModeChange }: 
   }, [isDark]);
 
   return (
-    <header style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}>
-      <Container size="xl" py="md">
-        <Group justify="space-between" align="center">
-          {/* Logo */}
-          <img
-            src={isDark ? '/logo-darkmode.svg' : '/logo.svg'}
-            alt="ImgCrush"
-            style={{ height: '40px', cursor: onReset ? 'pointer' : 'default' }}
-            onClick={onReset}
-            data-tour="welcome"
-          />
+    <header
+      className="glass-strong elevation-md animate-fade-in"
+      style={{
+        borderBottom: '1px solid var(--color-border-glass)',
+        padding: '20px 0',
+        borderRadius: '12px',
+        marginBottom: '8px',
+      }}
+    >
+      <Group justify="space-between" align="center" px="lg">
+        {/* Logo */}
+        <img
+          src={isDark ? '/logo-darkmode.svg' : '/logo.svg'}
+          alt="ImgCrush"
+          style={{
+            height: '42px',
+            cursor: onReset ? 'pointer' : 'default',
+            transition: 'transform 0.2s ease'
+          }}
+          className="hover-lift"
+          onClick={onReset}
+          data-tour="welcome"
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        />
 
-          {/* Actions */}
-          <Group gap="xs">
-            {/* Dark Mode Toggle */}
-            <Tooltip label={isDark ? 'Light mode' : 'Dark mode'}>
-              <ActionIcon
-                variant="light"
-                color="gray"
-                size="lg"
-                onClick={() => toggleColorScheme()}
-              >
-                {isDark ? <Sun size={18} /> : <Moon size={18} />}
-              </ActionIcon>
-            </Tooltip>
+        {/* Actions */}
+        <Group gap="sm">
+          {/* Dark Mode Toggle */}
+          <Tooltip label={isDark ? 'Light mode' : 'Dark mode'} position="bottom">
+            <ActionIcon
+              variant="subtle"
+              size="xl"
+              onClick={() => toggleColorScheme()}
+              className="transition-smooth elevation-sm hover:elevation-md"
+              style={{
+                backgroundColor: 'var(--color-bg-elevated)',
+                borderRadius: '12px',
+              }}
+            >
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
+            </ActionIcon>
+          </Tooltip>
 
-            {/* View Mode Toggle */}
-            {onViewModeChange && (
-              <>
-                <Tooltip label="Grid view">
-                  <ActionIcon
-                    variant={viewMode === 'grid' ? 'filled' : 'light'}
-                    color={viewMode === 'grid' ? 'red' : 'gray'}
-                    size="lg"
-                    onClick={() => onViewModeChange('grid')}
-                  >
-                    <Grid3x3 size={18} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label="List view">
-                  <ActionIcon
-                    variant={viewMode === 'list' ? 'filled' : 'light'}
-                    color={viewMode === 'list' ? 'red' : 'gray'}
-                    size="lg"
-                    onClick={() => onViewModeChange('list')}
-                  >
-                    <List size={18} />
-                  </ActionIcon>
-                </Tooltip>
-              </>
-            )}
-
-            {onReset && (
-              <Tooltip label="Start over">
+          {/* View Mode Toggle */}
+          {onViewModeChange && (
+            <>
+              <Tooltip label="Grid view" position="bottom">
                 <ActionIcon
-                  variant="light"
-                  color="gray"
-                  size="lg"
-                  onClick={onReset}
+                  variant={viewMode === 'grid' ? 'filled' : 'subtle'}
+                  color={viewMode === 'grid' ? 'red' : 'gray'}
+                  size="xl"
+                  onClick={() => onViewModeChange('grid')}
+                  className="transition-smooth elevation-sm hover:elevation-md"
+                  style={{
+                    backgroundColor: viewMode === 'grid' ? 'var(--color-primary)' : 'var(--color-bg-elevated)',
+                    borderRadius: '12px',
+                  }}
                 >
-                  <Home size={18} />
+                  <Grid3x3 size={20} />
                 </ActionIcon>
               </Tooltip>
-            )}
-            <Tooltip label="View on GitHub">
+              <Tooltip label="List view" position="bottom">
+                <ActionIcon
+                  variant={viewMode === 'list' ? 'filled' : 'subtle'}
+                  color={viewMode === 'list' ? 'red' : 'gray'}
+                  size="xl"
+                  onClick={() => onViewModeChange('list')}
+                  className="transition-smooth elevation-sm hover:elevation-md"
+                  style={{
+                    backgroundColor: viewMode === 'list' ? 'var(--color-primary)' : 'var(--color-bg-elevated)',
+                    borderRadius: '12px',
+                  }}
+                >
+                  <List size={20} />
+                </ActionIcon>
+              </Tooltip>
+            </>
+          )}
+
+          {onReset && (
+            <Tooltip label="Start over" position="bottom">
               <ActionIcon
-                component="a"
-                href="https://github.com/southwellmedia-dev/imgcrush"
-                target="_blank"
-                rel="noopener noreferrer"
                 variant="subtle"
-                color="gray"
-                size="lg"
+                size="xl"
+                onClick={onReset}
+                className="transition-smooth elevation-sm hover:elevation-md"
+                style={{
+                  backgroundColor: 'var(--color-bg-elevated)',
+                  borderRadius: '12px',
+                }}
               >
-                <Github size={18} />
+                <Home size={20} />
               </ActionIcon>
             </Tooltip>
-          </Group>
+          )}
+          <Tooltip label="View on GitHub" position="bottom">
+            <ActionIcon
+              component="a"
+              href="https://github.com/southwellmedia-dev/imgcrush"
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="subtle"
+              size="xl"
+              className="transition-smooth elevation-sm hover:elevation-md"
+              style={{
+                backgroundColor: 'var(--color-bg-elevated)',
+                borderRadius: '12px',
+              }}
+            >
+              <Github size={20} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
-      </Container>
+      </Group>
     </header>
   );
 }

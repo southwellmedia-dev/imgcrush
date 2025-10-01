@@ -82,14 +82,12 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
   if (processedImages.length <= 1) return null;
 
   return (
-    <Paper
-      p="xl"
-      radius="md"
-      withBorder
+    <div
+      className="glass-strong elevation-lg"
       style={{
-        background: "var(--color-bg-elevated)",
-        borderColor: "var(--color-border-primary)",
-        borderWidth: "2px",
+        padding: '24px',
+        borderRadius: '12px',
+        border: '1px solid var(--color-border-glass)',
       }}
       data-tour="batch-download"
     >
@@ -98,20 +96,24 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
         <Group justify="space-between" align="flex-start" wrap="wrap">
           <Stack gap={4}>
             <Group gap="xs">
-              <Archive size={22} color="var(--mantine-color-red-6)" strokeWidth={2.5} />
+              <Archive size={24} color="var(--color-primary)" strokeWidth={2.5} />
               <Text size="xl" fw={700} style={{ color: "var(--color-text-primary)" }}>
                 Export Center
               </Text>
             </Group>
-            <Text size="sm" c="dimmed">
+            <Text size="sm" style={{ color: 'var(--color-text-tertiary)' }}>
               {processedImages.length} {processedImages.length === 1 ? "image" : "images"} ready to download
             </Text>
           </Stack>
           <Badge
             size="lg"
-            variant="light"
-            color="green"
-            leftSection={<CheckCircle2 size={16} />}
+            leftSection={<CheckCircle2 size={16} color="var(--color-success)" />}
+            style={{
+              backgroundColor: 'rgba(16, 185, 129, 0.15)',
+              color: 'var(--color-success)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              fontWeight: 600,
+            }}
           >
             {processedImages.length} {processedImages.length === 1 ? "file" : "files"}
           </Badge>
@@ -119,50 +121,48 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
 
         {/* Stats Grid */}
         <Group gap="lg" grow>
-          <Paper
-            p="md"
-            radius="md"
-            withBorder
+          <div
+            className="glass elevation-sm"
             style={{
-              borderColor: "var(--color-border-primary)",
-              background: "var(--color-bg-secondary)",
+              padding: '16px',
+              borderRadius: '12px',
+              border: '1px solid var(--color-border-glass)',
             }}
           >
             <Stack gap="xs">
-              <Text size="xs" c="dimmed" fw={600} tt="uppercase" style={{ letterSpacing: "0.5px" }}>
+              <Text size="xs" fw={600} tt="uppercase" style={{ letterSpacing: "0.5px", color: 'var(--color-text-tertiary)' }}>
                 Original Size
               </Text>
               <Text size="xl" fw={700} style={{ color: "var(--color-text-primary)" }}>
                 {formatFileSize(totalOriginalSize)}
               </Text>
             </Stack>
-          </Paper>
+          </div>
 
-          <Paper
-            p="md"
-            radius="md"
-            withBorder
+          <div
+            className="glass elevation-sm"
             style={{
-              borderColor: "var(--color-border-primary)",
-              background: "var(--color-bg-secondary)",
+              padding: '16px',
+              borderRadius: '12px',
+              border: '1px solid var(--color-border-glass)',
             }}
           >
             <Stack gap="xs">
-              <Text size="xs" c="dimmed" fw={600} tt="uppercase" style={{ letterSpacing: "0.5px" }}>
+              <Text size="xs" fw={600} tt="uppercase" style={{ letterSpacing: "0.5px", color: 'var(--color-text-tertiary)' }}>
                 Optimized Size
               </Text>
-              <Text size="xl" fw={700} style={{ color: "#10b981" }}>
+              <Text size="xl" fw={700} style={{ color: "var(--color-success)" }}>
                 {formatFileSize(totalProcessedSize)}
               </Text>
             </Stack>
-          </Paper>
+          </div>
 
-          <Paper
-            p="md"
-            radius="md"
+          <div
+            className="elevation-md"
             style={{
-              background: "#10b981",
-              border: "none",
+              padding: '16px',
+              borderRadius: '12px',
+              background: 'var(--color-success)',
             }}
           >
             <Stack gap="xs">
@@ -178,16 +178,16 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
                 </Text>
               </Group>
             </Stack>
-          </Paper>
+          </div>
         </Group>
 
         {/* Progress Bar */}
         <Stack gap="xs">
           <Group justify="space-between">
-            <Text size="xs" fw={600} c="dimmed">
+            <Text size="xs" fw={600} style={{ color: 'var(--color-text-tertiary)' }}>
               Overall Compression
             </Text>
-            <Text size="xs" fw={600} style={{ color: "#10b981" }}>
+            <Text size="xs" fw={600} style={{ color: "var(--color-success)" }}>
               {compressionRatio.toFixed(1)}% reduction
             </Text>
           </Group>
@@ -195,7 +195,14 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
             value={compressionRatio}
             size="lg"
             radius="xl"
-            color="green"
+            style={{
+              backgroundColor: 'var(--color-bg-tertiary)',
+            }}
+            styles={{
+              section: {
+                background: 'var(--color-success)',
+              },
+            }}
           />
         </Stack>
 
@@ -208,7 +215,10 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
               leftSection={<Edit2 size={18} />}
               onClick={() => setShowRenameModal(true)}
               variant="light"
-              color="blue"
+              className="transition-smooth"
+              style={{
+                borderRadius: '10px',
+              }}
             >
               Rename All
             </Button>
@@ -219,9 +229,22 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
             leftSection={<Download size={20} />}
             rightSection={<Package size={16} />}
             onClick={handleDownloadAll}
-            color="red"
             variant="filled"
-            style={{ marginLeft: "auto" }}
+            className="elevation-md transition-smooth"
+            style={{
+              marginLeft: "auto",
+              backgroundColor: 'var(--color-primary)',
+              borderRadius: '10px',
+              fontWeight: 600,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--color-primary)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
           >
             Download All as ZIP
           </Button>
@@ -237,6 +260,6 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
           onApply={onBulkRename}
         />
       )}
-    </Paper>
+    </div>
   );
 }

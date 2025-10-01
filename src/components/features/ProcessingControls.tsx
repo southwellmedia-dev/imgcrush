@@ -11,6 +11,7 @@ interface ProcessingControlsProps {
   selectedPreset?: string;
   onPresetChange?: (presetId: string) => void;
   onRegenerateAll?: () => void;
+  isModal?: boolean;
 }
 
 export function ProcessingControls({
@@ -19,9 +20,10 @@ export function ProcessingControls({
   onClear,
   selectedPreset = 'custom',
   onPresetChange,
-  onRegenerateAll
+  onRegenerateAll,
+  isModal = false
 }: ProcessingControlsProps) {
-  const [collapsed, setCollapsed] = useState(true); // Start collapsed by default
+  const [collapsed, setCollapsed] = useState(!isModal); // Start expanded in modal, collapsed otherwise
   const [showAdvanced, setShowAdvanced] = useState(selectedPreset === 'custom');
   const [maintainAspectRatio, setMaintainAspectRatio] = useState(true);
   const [aspectRatio, setAspectRatio] = useState(16 / 9); // Default aspect ratio
@@ -505,7 +507,15 @@ export function ProcessingControls({
                         All images automatically have EXIF data removed (camera info, GPS, timestamps) for your privacy
                       </Text>
                     </div>
-                    <Badge color="green" variant="light" size="lg">
+                    <Badge
+                      size="lg"
+                      style={{
+                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                        color: 'var(--color-success)',
+                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                        fontWeight: 600,
+                      }}
+                    >
                       ✓ Always Stripped
                     </Badge>
                   </Group>
