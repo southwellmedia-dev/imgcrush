@@ -7,13 +7,15 @@ export interface ProcessedImage {
   processing: boolean;
   processed: boolean;
   settings?: ProcessingSettings; // Per-image settings (overrides global if present)
+  customFileName?: string; // User's custom filename (without extension)
+  outputFormat?: 'jpeg' | 'png' | 'webp' | 'avif'; // Actual output format after processing
 }
 
 export interface ProcessingSettings {
   quality: number;
   maxWidth: number;
   maxHeight: number;
-  format: 'jpeg' | 'png' | 'webp';
+  format: 'jpeg' | 'png' | 'webp' | 'avif';
   resizeMode: 'max-dimensions' | 'exact' | 'percentage';
   percentage: number;
   exactWidth: number;
@@ -21,4 +23,5 @@ export interface ProcessingSettings {
   preserveAspectRatio?: boolean;
   sharpen?: boolean;
   removeMetadata?: boolean;
+  stripExif?: boolean; // Strip EXIF data from images
 }

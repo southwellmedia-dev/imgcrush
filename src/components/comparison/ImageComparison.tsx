@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Slider, Stack, Group, Text, Badge, Paper, Button, ActionIcon } from '@mantine/core';
+import { Slider, Stack, Group, Text, Badge, Paper, Button, ActionIcon, Loader } from '@mantine/core';
 import { ArrowLeftRight, Layers, ToggleLeft, Move } from 'lucide-react';
 import { ProcessedImage } from '../../types';
 import { formatFileSize } from '../../utils/fileUtils';
@@ -13,25 +13,55 @@ export function ImageComparison({ image, onClose }: ImageComparisonProps) {
   const [compareMode, setCompareMode] = useState<'slider' | 'side-by-side' | 'toggle'>('slider');
   const [sliderPosition, setSliderPosition] = useState(50);
   const [showOriginal, setShowOriginal] = useState(false);
-  const [originalUrl, setOriginalUrl] = useState<string>('');
-  const [processedUrl, setProcessedUrl] = useState<string>('');
+  const [originalUrl, setOriginalUrl] = useState<string | null>(null);
+  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLDivElement>(null);
 
+  // Use refs to track blob URLs and prevent double-revocation in StrictMode
+  const originalUrlRef = useRef<string | null>(null);
+  const processedUrlRef = useRef<string | null>(null);
+
   useEffect(() => {
+    // Revoke old URL if it exists (only when dependency changes)
+    if (originalUrlRef.current) {
+      URL.revokeObjectURL(originalUrlRef.current);
+    }
+
     const url = URL.createObjectURL(image.originalFile);
+    originalUrlRef.current = url;
     setOriginalUrl(url);
-    return () => URL.revokeObjectURL(url);
+
+    // Don't revoke in cleanup - let it persist for StrictMode compatibility
   }, [image.originalFile]);
 
   useEffect(() => {
     if (image.processedBlob) {
+      // Revoke old URL if it exists (only when dependency changes)
+      if (processedUrlRef.current) {
+        URL.revokeObjectURL(processedUrlRef.current);
+      }
+
       const url = URL.createObjectURL(image.processedBlob);
+      processedUrlRef.current = url;
       setProcessedUrl(url);
-      return () => URL.revokeObjectURL(url);
+
+      // Don't revoke in cleanup - let it persist for StrictMode compatibility
     }
   }, [image.processedBlob]);
+
+  // Cleanup blob URLs only on component unmount
+  useEffect(() => {
+    return () => {
+      if (originalUrlRef.current) {
+        URL.revokeObjectURL(originalUrlRef.current);
+      }
+      if (processedUrlRef.current) {
+        URL.revokeObjectURL(processedUrlRef.current);
+      }
+    };
+  }, []); // Empty deps = only runs cleanup on unmount
 
   const compressionRatio = image.processedSize > 0
     ? ((image.originalSize - image.processedSize) / image.originalSize * 100)
@@ -66,6 +96,16 @@ export function ImageComparison({ image, onClose }: ImageComparisonProps) {
       };
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // Don't render comparison until both URLs are loaded
+  if (!originalUrl || !processedUrl) {
+    return (
+      <Stack gap="md" align="center" style={{ padding: '40px' }}>
+        <Loader size={32} className="animate-spin" />
+        <Text size="sm" c="dimmed">Loading images...</Text>
+      </Stack>
+    );
+  }
 
   return (
     <Stack gap="md">

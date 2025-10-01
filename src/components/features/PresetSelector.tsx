@@ -29,12 +29,10 @@ export function PresetSelector({ selectedPreset, onPresetChange }: PresetSelecto
             padding="md"
             radius="md"
             withBorder
-            className="hover:shadow-md"
+            className="hover:shadow-md cursor-pointer transition-all"
             style={{
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-              borderColor: selectedPreset === preset.id ? '#e11d48' : '#e5e7eb',
-              backgroundColor: selectedPreset === preset.id ? '#fff1f2' : 'white',
+              borderColor: selectedPreset === preset.id ? 'var(--color-primary)' : 'var(--color-border-primary)',
+              backgroundColor: selectedPreset === preset.id ? 'var(--color-primary-light)' : 'var(--color-bg-elevated)',
               borderWidth: selectedPreset === preset.id ? '2px' : '1px',
               transform: selectedPreset === preset.id ? 'scale(1.02)' : 'scale(1)',
             }}
@@ -85,17 +83,6 @@ export function PresetSelector({ selectedPreset, onPresetChange }: PresetSelecto
             {showAll ? 'Show Less' : `Show ${additionalPresets.length} More Options`}
           </Button>
         </div>
-      )}
-
-      {selectedPreset === 'custom' && (
-        <Card padding="sm" radius="md" bg="yellow.0" withBorder>
-          <Group gap="xs">
-            <Text size="xs">💡</Text>
-            <Text size="xs" c="dimmed">
-              Custom settings let you fine-tune all parameters after uploading images
-            </Text>
-          </Group>
-        </Card>
       )}
     </Stack>
   );

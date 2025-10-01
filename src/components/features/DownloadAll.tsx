@@ -1,9 +1,17 @@
-import React from 'react';
-import { Download, Package, TrendingDown, Check, Trash2 } from 'lucide-react';
-import { Paper, Group, Stack, Text, Button, Badge, Progress } from '@mantine/core';
-import JSZip from 'jszip';
-import { ProcessedImage } from '../../types';
-import { formatFileSize } from '../../utils/fileUtils';
+// React import not required with new JSX transform
+import { Download, Package, TrendingDown, Check, Trash2, Sparkles, Archive, CheckCircle2 } from "lucide-react";
+import {
+  Paper,
+  Group,
+  Stack,
+  Text,
+  Button,
+  Badge,
+  Progress,
+} from "@mantine/core";
+import JSZip from "jszip";
+import { ProcessedImage } from "../../types";
+import { formatFileSize } from "../../utils/fileUtils";
 
 interface DownloadAllProps {
   images: ProcessedImage[];
@@ -14,29 +22,58 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
   const handleDownloadAll = async () => {
     const zip = new JSZip();
 
-    images.forEach((image, index) => {
+    images.forEach((image) => {
       if (image.processedBlob) {
-        const filename = `compressed_${image.originalFile.name}`;
+        // Get the correct extension based on output format
+        const getExtension = (format: string | undefined): string => {
+          switch (format) {
+            case 'jpeg': return '.jpg';
+            case 'png': return '.png';
+            case 'webp': return '.webp';
+            case 'avif': return '.avif';
+            default: {
+              // Fallback to original extension
+              const originalName = image.originalFile.name;
+              const lastDotIndex = originalName.lastIndexOf(".");
+              return lastDotIndex > 0 ? originalName.substring(lastDotIndex) : ".jpg";
+            }
+          }
+        };
+
+        const extension = getExtension(image.outputFormat);
+        const baseName = image.customFileName ||
+          image.originalFile.name.replace(/\.[^/.]+$/, '') || 'image';
+        const filename = image.customFileName
+          ? `${image.customFileName}${extension}`
+          : `compressed_${baseName}${extension}`;
         zip.file(filename, image.processedBlob);
       }
     });
 
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    const zipBlob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(zipBlob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'compressed_images.zip';
+    a.download = "compressed_images.zip";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
-  const processedImages = images.filter(img => img.processed);
-  const totalOriginalSize = images.reduce((sum, img) => sum + img.originalSize, 0);
-  const totalProcessedSize = images.reduce((sum, img) => sum + img.processedSize, 0);
+  const processedImages = images.filter((img) => img.processed);
+  const totalOriginalSize = images.reduce(
+    (sum, img) => sum + img.originalSize,
+    0
+  );
+  const totalProcessedSize = images.reduce(
+    (sum, img) => sum + img.processedSize,
+    0
+  );
   const totalSaved = totalOriginalSize - totalProcessedSize;
-  const compressionRatio = totalOriginalSize > 0 ? (totalSaved / totalOriginalSize * 100) : 0;
+  const compressionRatio =
+    totalOriginalSize > 0 ? (totalSaved / totalOriginalSize) * 100 : 0;
+  const formattedSaved = `${totalSaved >= 0 ? '' : '+'}${formatFileSize(Math.abs(totalSaved))}`;
 
   // Only show batch download for multiple images
   if (processedImages.length <= 1) return null;
@@ -45,117 +82,146 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
     <Paper
       p="xl"
       radius="md"
+      withBorder
       style={{
-        background: 'radial-gradient(circle at bottom right, #374151 0%, #1f2937 60%)',
-        border: '1px solid #374151'
+        background: "var(--color-bg-elevated)",
+        borderColor: "var(--color-border-primary)",
+        borderWidth: "2px",
       }}
       data-tour="batch-download"
     >
-      <Group justify="space-between" align="center" wrap="wrap" gap="xl">
-        <Stack gap="md" style={{ flex: 1 }}>
-          <div>
-            <Group gap="sm" mb={4}>
-              <Package size={24} color="#ef4444" />
-              <Text size="xl" fw={700} c="white">
-                {processedImages.length} {processedImages.length === 1 ? 'Image' : 'Images'} Ready
+      <Stack gap="lg">
+        {/* Header */}
+        <Group justify="space-between" align="flex-start" wrap="wrap">
+          <Stack gap={4}>
+            <Group gap="xs">
+              <CheckCircle2 size={22} color="#10b981" strokeWidth={2.5} />
+              <Text size="xl" fw={700} style={{ color: "var(--color-text-primary)" }}>
+                {processedImages.length} {processedImages.length === 1 ? "Image" : "Images"} Ready
               </Text>
             </Group>
-            <Text size="sm" c="gray.4">
-              All images optimized and ready to download
+            <Text size="sm" c="dimmed">
+              All images have been optimized successfully
             </Text>
-          </div>
+          </Stack>
+          <Badge
+            size="lg"
+            variant="light"
+            color="green"
+            leftSection={<Package size={16} />}
+          >
+            {processedImages.length} {processedImages.length === 1 ? "file" : "files"}
+          </Badge>
+        </Group>
 
-          <Group gap="xl" wrap="wrap">
-            <Paper p="md" radius="md" style={{ backgroundColor: '#374151', border: '1px solid #4b5563' }}>
-              <Group gap="xs" mb={6}>
-                <Package size={16} color="#9ca3af" />
-                <Text size="xs" c="gray.4" fw={500}>Original Size</Text>
-              </Group>
-              <Text size="xl" fw={700} c="white">{formatFileSize(totalOriginalSize)}</Text>
-            </Paper>
+        {/* Stats Grid */}
+        <Group gap="lg" grow>
+          <Paper
+            p="md"
+            radius="md"
+            withBorder
+            style={{
+              borderColor: "var(--color-border-primary)",
+              background: "var(--color-bg-secondary)",
+            }}
+          >
+            <Stack gap="xs">
+              <Text size="xs" c="dimmed" fw={600} tt="uppercase" style={{ letterSpacing: "0.5px" }}>
+                Original Size
+              </Text>
+              <Text size="xl" fw={700} style={{ color: "var(--color-text-primary)" }}>
+                {formatFileSize(totalOriginalSize)}
+              </Text>
+            </Stack>
+          </Paper>
 
-            <Paper p="md" radius="md" style={{ backgroundColor: '#374151', border: '1px solid #4b5563' }}>
-              <Group gap="xs" mb={6}>
-                <Check size={16} color="#10b981" />
-                <Text size="xs" c="gray.4" fw={500}>Compressed Size</Text>
-              </Group>
-              <Text size="xl" fw={700} c="green.4">{formatFileSize(totalProcessedSize)}</Text>
-            </Paper>
+          <Paper
+            p="md"
+            radius="md"
+            withBorder
+            style={{
+              borderColor: "var(--color-border-primary)",
+              background: "var(--color-bg-secondary)",
+            }}
+          >
+            <Stack gap="xs">
+              <Text size="xs" c="dimmed" fw={600} tt="uppercase" style={{ letterSpacing: "0.5px" }}>
+                Optimized Size
+              </Text>
+              <Text size="xl" fw={700} style={{ color: "#10b981" }}>
+                {formatFileSize(totalProcessedSize)}
+              </Text>
+            </Stack>
+          </Paper>
 
-            <Paper p="md" radius="md" style={{ backgroundColor: '#065f46', border: '1px solid #047857' }}>
-              <Group gap="xs" mb={6}>
-                <TrendingDown size={16} color="#6ee7b7" />
-                <Text size="xs" c="green.2" fw={500}>Space Saved</Text>
+          <Paper
+            p="md"
+            radius="md"
+            style={{
+              background: "#10b981",
+              border: "none",
+            }}
+          >
+            <Stack gap="xs">
+              <Text size="xs" fw={600} tt="uppercase" style={{ color: "rgba(255, 255, 255, 0.9)", letterSpacing: "0.5px" }}>
+                Space Saved
+              </Text>
+              <Group gap="xs" align="baseline">
+                <Text size="xl" fw={700} style={{ color: "white" }}>
+                  {compressionRatio.toFixed(1)}%
+                </Text>
+                <Text size="sm" fw={600} style={{ color: "rgba(255, 255, 255, 0.9)" }}>
+                  ({formattedSaved})
+                </Text>
               </Group>
-              <Group gap="sm" align="center">
-                <Text size="xl" fw={700} c="green.3">{compressionRatio.toFixed(0)}%</Text>
-                <Badge
-                  variant="filled"
-                  color="green"
-                  size="lg"
-                  style={{ backgroundColor: '#10b981' }}
-                >
-                  {formatFileSize(totalSaved)}
-                </Badge>
-              </Group>
-            </Paper>
+            </Stack>
+          </Paper>
+        </Group>
+
+        {/* Progress Bar */}
+        <Stack gap="xs">
+          <Group justify="space-between">
+            <Text size="xs" fw={600} c="dimmed">
+              Overall Compression
+            </Text>
+            <Text size="xs" fw={600} style={{ color: "#10b981" }}>
+              {compressionRatio.toFixed(1)}% reduction
+            </Text>
           </Group>
-
           <Progress
             value={compressionRatio}
-            color="green"
             size="lg"
             radius="xl"
-            style={{ maxWidth: 500 }}
+            color="green"
           />
         </Stack>
 
-        <Group gap="md">
+        {/* Action Buttons */}
+        <Group justify="space-between" wrap="wrap" gap="md">
           {onClearAll && (
             <Button
-              size="xl"
-              leftSection={<Trash2 size={20} />}
+              size="md"
+              leftSection={<Trash2 size={18} />}
               onClick={onClearAll}
-              variant="outline"
-              styles={{
-                root: {
-                  fontSize: '15px',
-                  fontWeight: 600,
-                  paddingLeft: '28px',
-                  paddingRight: '28px',
-                  height: '56px',
-                  borderColor: '#6b7280',
-                  color: '#e5e7eb',
-                  '&:hover': {
-                    backgroundColor: '#374151',
-                    borderColor: '#9ca3af'
-                  }
-                }
-              }}
+              variant="light"
+              color="gray"
             >
               Clear All
             </Button>
           )}
           <Button
-            size="xl"
-            leftSection={<Download size={24} />}
+            size="md"
+            leftSection={<Download size={20} />}
+            rightSection={<Archive size={16} />}
             onClick={handleDownloadAll}
             color="red"
             variant="filled"
-            styles={{
-              root: {
-                fontSize: '17px',
-                fontWeight: 700,
-                paddingLeft: '40px',
-                paddingRight: '40px',
-                height: '56px'
-              }
-            }}
+            style={{ marginLeft: "auto" }}
           >
             Download All as ZIP
           </Button>
         </Group>
-      </Group>
+      </Stack>
     </Paper>
   );
 }
