@@ -108,7 +108,7 @@ export function CropModal({ opened, onClose, imageUrl, imageName, imageFormat, o
     try {
       const croppedBlob = await createCroppedImage();
 
-      // Get correct extension based on format
+      // Get correct extension based on actual blob type (handles browser fallbacks)
       const getExtension = (format: string | undefined): string => {
         switch (format) {
           case 'png': return '.png';
@@ -119,7 +119,23 @@ export function CropModal({ opened, onClose, imageUrl, imageName, imageFormat, o
         }
       };
 
-      const extension = getExtension(imageFormat);
+      // Derive extension from actual blob type to handle browser fallbacks
+      const extension = (() => {
+        switch (croppedBlob.type) {
+          case 'image/png':
+            return '.png';
+          case 'image/webp':
+            return '.webp';
+          case 'image/avif':
+            return '.avif';
+          case 'image/jpeg':
+          case 'image/jpg':
+            return '.jpg';
+          default:
+            return getExtension(imageFormat);
+        }
+      })();
+
       const baseName = imageName.replace(/\.[^/.]+$/, '') || 'image';
       const croppedFileName = `${baseName}_cropped${extension}`;
       onCropComplete(croppedBlob, croppedFileName);
