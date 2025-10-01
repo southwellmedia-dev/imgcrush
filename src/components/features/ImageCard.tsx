@@ -81,7 +81,7 @@ export function ImageCard({ image, onRemove, onRegenerate, globalSettings, onUpd
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder data-tour="image-card">
       <Card.Section>
-        <div style={{ position: 'relative', backgroundColor: '#f8f9fa', height: 250, overflow: 'hidden' }}>
+        <div style={{ position: 'relative', backgroundColor: 'var(--color-bg-secondary)', height: 250, overflow: 'hidden' }}>
           {image.processing ? (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <Stack align="center" gap="sm">
@@ -145,7 +145,7 @@ export function ImageCard({ image, onRemove, onRegenerate, globalSettings, onUpd
 
         {/* Optimization Details */}
         {image.processed && (
-          <Paper p="sm" bg="gray.0" radius="md">
+          <Paper p="sm" radius="md" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
             <Stack gap="xs">
               {/* File Size */}
               <Group justify="space-between">

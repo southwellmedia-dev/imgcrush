@@ -1,6 +1,124 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/**
+ * ImgCrush Design System
+ * CSS Variables for consistent theming across light/dark modes
+ */
+
+/* Light mode (default) */
+:root {
+  /* Brand Colors */
+  --color-primary: #dc2626;
+  --color-primary-hover: #b91c1c;
+  --color-primary-light: #fef2f2;
+  --color-primary-dark: #991b1b;
+
+  /* Backgrounds */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  --color-bg-elevated: #ffffff;
+
+  /* Borders */
+  --color-border-primary: #e5e7eb;
+  --color-border-secondary: #d1d5db;
+  --color-border-focus: #dc2626;
+
+  /* Text */
+  --color-text-primary: #111827;
+  --color-text-secondary: #374151;
+  --color-text-tertiary: #6b7280;
+  --color-text-muted: #9ca3af;
+
+  /* Interactive States */
+  --color-hover-bg: #f3f4f6;
+  --color-active-bg: #e5e7eb;
+
+  /* Drop zones */
+  --color-dropzone-border: #d1d5db;
+  --color-dropzone-bg: #f9fafb;
+  --color-dropzone-hover-border: #dc2626;
+  --color-dropzone-active-border: #dc2626;
+  --color-dropzone-active-bg: #fef2f2;
+}
+
+/* Dark mode - Combined selector */
+[data-mantine-color-scheme="dark"] {
+  /* Mantine integration */
+  --mantine-color-body: #0C0C0C;
+  --mantine-color-dark-9: #0C0C0C;
+
+  /* Brand Colors */
+  --color-primary: #dc2626;
+  --color-primary-hover: #b91c1c;
+  --color-primary-light: #2d1414;
+  --color-primary-dark: #991b1b;
+
+  /* Backgrounds */
+  --color-bg-primary: #0C0C0C;
+  --color-bg-secondary: #1A1B1E;
+  --color-bg-tertiary: #25262b;
+  --color-bg-elevated: #25262b;
+
+  /* Borders */
+  --color-border-primary: #373A40;
+  --color-border-secondary: #2C2E33;
+  --color-border-focus: #dc2626;
+
+  /* Text */
+  --color-text-primary: #C1C2C5;
+  --color-text-secondary: #A6A7AB;
+  --color-text-tertiary: #909296;
+  --color-text-muted: #5c5f66;
+
+  /* Interactive States */
+  --color-hover-bg: #25262b;
+  --color-active-bg: #2C2E33;
+
+  /* Drop zones */
+  --color-dropzone-border: #373A40;
+  --color-dropzone-bg: #1A1B1E;
+  --color-dropzone-hover-border: #dc2626;
+  --color-dropzone-active-border: #dc2626;
+  --color-dropzone-active-bg: #2d1414;
+}
+
+/* Custom utility classes */
+.bg-primary {
+  background-color: var(--color-bg-primary);
+}
+
+.bg-secondary {
+  background-color: var(--color-bg-secondary);
+}
+
+.bg-elevated {
+  background-color: var(--color-bg-elevated);
+}
+
+.border-primary {
+  border-color: var(--color-border-primary);
+}
+
+.border-secondary {
+  border-color: var(--color-border-secondary);
+}
+
+.text-primary {
+  color: var(--color-text-primary);
+}
+
+.text-secondary {
+  color: var(--color-text-secondary);
+}
+
+.text-tertiary {
+  color: var(--color-text-tertiary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
 
 /* Custom range input styles */
 input[type="range"] {
@@ -83,24 +201,40 @@ input[type="range"]:focus::-moz-range-thumb {
   }
 }
 
-/* Custom scrollbar for light theme */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
+/* Light mode scrollbar */
+:root:not([data-mantine-color-scheme="dark"]) ::-webkit-scrollbar-track {
   background: #f3f4f6;
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb {
+:root:not([data-mantine-color-scheme="dark"]) ::-webkit-scrollbar-thumb {
   background: #d1d5db;
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover {
+:root:not([data-mantine-color-scheme="dark"]) ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* Dark mode scrollbar */
+[data-mantine-color-scheme="dark"] ::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 4px;
+}
+
+[data-mantine-color-scheme="dark"] ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+[data-mantine-color-scheme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }
 
 /* Driver.js Tour Custom Styling */

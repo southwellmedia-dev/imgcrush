@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { ImageUpload } from "./components/features/ImageUpload";
 import { ImageProcessor } from "./components/features/ImageProcessor";
 import { ProcessingControls } from "./components/features/ProcessingControls";
@@ -7,22 +7,30 @@ import { Footer } from "./components/ui/Footer";
 import { ProductTour } from "./components/ui/ProductTour";
 import { ProcessedImage, ProcessingSettings } from "./types";
 import { applyPreset } from "./presets/compressionPresets";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import { notifications } from "@mantine/notifications";
+import {
+  loadSelectedPreset,
+  loadProcessingSettings,
+  loadViewMode,
+  saveSelectedPreset,
+  saveProcessingSettings,
+  saveViewMode,
+  DEFAULT_PROCESSING_SETTINGS,
+} from "./utils/settingsStorage";
 
 function App() {
   const [files, setFiles] = useState<File[]>([]);
   const [processedImages, setProcessedImages] = useState<ProcessedImage[]>([]);
-  const [selectedPreset, setSelectedPreset] = useState<string>('compression-only');
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [processingSettings, setProcessingSettings] = useState({
-    quality: 0.80,
-    maxWidth: 99999,
-    maxHeight: 99999,
-    format: "jpeg" as "jpeg" | "png" | "webp",
-    resizeMode: "percentage" as "max-dimensions" | "exact" | "percentage",
-    percentage: 100,
-    exactWidth: 800,
-    exactHeight: 600,
-  });
+  const [selectedPreset, setSelectedPreset] = useState<string>(
+    () => loadSelectedPreset() || 'compression-only'
+  );
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    () => loadViewMode() || 'grid'
+  );
+  const [processingSettings, setProcessingSettings] = useState<ProcessingSettings>(
+    () => loadProcessingSettings() || DEFAULT_PROCESSING_SETTINGS
+  );
 
   const handleFilesSelected = useCallback((newFiles: File[]) => {
     setFiles((prev) => [...prev, ...newFiles]);
@@ -145,12 +153,97 @@ function App() {
     setProcessingSettings(settings);
   }, []);
 
+  // Keyboard shortcuts handlers
+  const handlePasteShortcut = useCallback(async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      const imageFiles: File[] = [];
+
+      for (const item of clipboardItems) {
+        for (const type of item.types) {
+          if (type.startsWith('image/')) {
+            const blob = await item.getType(type);
+            const file = new File([blob], `pasted-image-${Date.now()}.${type.split('/')[1]}`, { type });
+            imageFiles.push(file);
+          }
+        }
+      }
+
+      if (imageFiles.length > 0) {
+        handleFilesSelected(imageFiles);
+        notifications.show({
+          title: 'Images pasted',
+          message: `Added ${imageFiles.length} image${imageFiles.length > 1 ? 's' : ''} from clipboard`,
+          color: 'green',
+        });
+      } else {
+        notifications.show({
+          title: 'No images found',
+          message: 'No images found in clipboard. Try copying an image first.',
+          color: 'yellow',
+        });
+      }
+    } catch (error) {
+      notifications.show({
+        title: 'Paste failed',
+        message: 'Could not access clipboard. Please use drag & drop instead.',
+        color: 'red',
+      });
+    }
+  }, [handleFilesSelected]);
+
+  const handleSaveShortcut = useCallback(() => {
+    const firstProcessedImage = processedImages.find(img => img.processed && img.processedBlob);
+
+    if (firstProcessedImage && firstProcessedImage.processedBlob) {
+      const url = URL.createObjectURL(firstProcessedImage.processedBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `compressed_${firstProcessedImage.originalFile.name}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      notifications.show({
+        title: 'Download started',
+        message: `Downloading ${firstProcessedImage.originalFile.name}`,
+        color: 'green',
+      });
+    } else {
+      notifications.show({
+        title: 'No images ready',
+        message: 'Please wait for images to finish processing, or upload some images first.',
+        color: 'yellow',
+      });
+    }
+  }, [processedImages]);
+
+  // Setup keyboard shortcuts
+  useKeyboardShortcuts({
+    onPaste: handlePasteShortcut,
+    onSave: handleSaveShortcut,
+  });
+
+  // Persist settings to localStorage
+  useEffect(() => {
+    saveSelectedPreset(selectedPreset);
+  }, [selectedPreset]);
+
+  useEffect(() => {
+    saveProcessingSettings(processingSettings);
+  }, [processingSettings]);
+
+  useEffect(() => {
+    saveViewMode(viewMode);
+  }, [viewMode]);
+
   const hasImages = processedImages.length > 0;
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Product Tour - Disabled for now */}
-      {/* <ProductTour hasImages={hasImages} /> */}
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--mantine-color-body)' }}>
+      {/* Product Tour - Enabled */}
+      <ProductTour hasImages={hasImages} />
 
       <main className="flex-1">
         {!hasImages ? (
@@ -192,7 +285,7 @@ function App() {
                   viewMode={viewMode}
                 />
 
-                <div id="settings-section" className="pt-8 border-t border-gray-200">
+                <div id="settings-section" className="pt-8 border-t" style={{ borderColor: 'var(--color-border-primary)' }}>
                   <ProcessingControls
                     settings={processingSettings}
                     onSettingsChange={setProcessingSettings}

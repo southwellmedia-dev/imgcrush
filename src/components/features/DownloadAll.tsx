@@ -46,8 +46,8 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
       p="xl"
       radius="md"
       style={{
-        background: 'radial-gradient(circle at bottom right, #374151 0%, #1f2937 60%)',
-        border: '1px solid #374151'
+        background: 'var(--color-bg-tertiary)',
+        border: '1px solid var(--color-border-primary)'
       }}
       data-tour="batch-download"
     >
@@ -55,45 +55,44 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
         <Stack gap="md" style={{ flex: 1 }}>
           <div>
             <Group gap="sm" mb={4}>
-              <Package size={24} color="#ef4444" />
-              <Text size="xl" fw={700} c="white">
+              <Package size={24} color="var(--color-primary)" />
+              <Text size="xl" fw={700} style={{ color: 'var(--color-text-primary)' }}>
                 {processedImages.length} {processedImages.length === 1 ? 'Image' : 'Images'} Ready
               </Text>
             </Group>
-            <Text size="sm" c="gray.4">
+            <Text size="sm" style={{ color: 'var(--color-text-tertiary)' }}>
               All images optimized and ready to download
             </Text>
           </div>
 
           <Group gap="xl" wrap="wrap">
-            <Paper p="md" radius="md" style={{ backgroundColor: '#374151', border: '1px solid #4b5563' }}>
+            <Paper p="md" radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', border: '1px solid var(--color-border-secondary)' }}>
               <Group gap="xs" mb={6}>
-                <Package size={16} color="#9ca3af" />
-                <Text size="xs" c="gray.4" fw={500}>Original Size</Text>
+                <Package size={16} style={{ color: 'var(--color-text-muted)' }} />
+                <Text size="xs" style={{ color: 'var(--color-text-tertiary)' }} fw={500}>Original Size</Text>
               </Group>
-              <Text size="xl" fw={700} c="white">{formatFileSize(totalOriginalSize)}</Text>
+              <Text size="xl" fw={700} style={{ color: 'var(--color-text-primary)' }}>{formatFileSize(totalOriginalSize)}</Text>
             </Paper>
 
-            <Paper p="md" radius="md" style={{ backgroundColor: '#374151', border: '1px solid #4b5563' }}>
+            <Paper p="md" radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', border: '1px solid var(--color-border-secondary)' }}>
               <Group gap="xs" mb={6}>
                 <Check size={16} color="#10b981" />
-                <Text size="xs" c="gray.4" fw={500}>Compressed Size</Text>
+                <Text size="xs" style={{ color: 'var(--color-text-tertiary)' }} fw={500}>Compressed Size</Text>
               </Group>
-              <Text size="xl" fw={700} c="green.4">{formatFileSize(totalProcessedSize)}</Text>
+              <Text size="xl" fw={700} color="green.4">{formatFileSize(totalProcessedSize)}</Text>
             </Paper>
 
-            <Paper p="md" radius="md" style={{ backgroundColor: '#065f46', border: '1px solid #047857' }}>
+            <Paper p="md" radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', border: '1px solid var(--color-border-secondary)' }}>
               <Group gap="xs" mb={6}>
-                <TrendingDown size={16} color="#6ee7b7" />
-                <Text size="xs" c="green.2" fw={500}>Space Saved</Text>
+                <TrendingDown size={16} color="#10b981" />
+                <Text size="xs" style={{ color: 'var(--color-text-tertiary)' }} fw={500}>Space Saved</Text>
               </Group>
               <Group gap="sm" align="center">
-                <Text size="xl" fw={700} c="green.3">{compressionRatio.toFixed(0)}%</Text>
+                <Text size="xl" fw={700} color="green">{compressionRatio.toFixed(0)}%</Text>
                 <Badge
                   variant="filled"
                   color="green"
                   size="lg"
-                  style={{ backgroundColor: '#10b981' }}
                 >
                   {formatFileSize(totalSaved)}
                 </Badge>

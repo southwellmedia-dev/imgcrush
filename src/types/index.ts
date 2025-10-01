@@ -13,7 +13,7 @@ export interface ProcessingSettings {
   quality: number;
   maxWidth: number;
   maxHeight: number;
-  format: 'jpeg' | 'png' | 'webp';
+  format: 'jpeg' | 'png' | 'webp' | 'avif';
   resizeMode: 'max-dimensions' | 'exact' | 'percentage';
   percentage: number;
   exactWidth: number;
@@ -21,4 +21,5 @@ export interface ProcessingSettings {
   preserveAspectRatio?: boolean;
   sharpen?: boolean;
   removeMetadata?: boolean;
+  stripExif?: boolean; // Strip EXIF data from images
 }

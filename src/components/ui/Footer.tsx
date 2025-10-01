@@ -4,7 +4,7 @@ import { Github } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer style={{ borderTop: "1px solid #e9ecef", marginTop: "auto" }}>
+    <footer style={{ borderTop: "1px solid var(--color-border-primary)", marginTop: "auto" }}>
       <Container size="xl" py="sm">
         <Group justify="space-between" align="center">
           <Text size="xs" c="dimmed">

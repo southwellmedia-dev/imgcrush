@@ -210,7 +210,7 @@ export function ImageSettingsModal({
                   size="xs"
                   value={settings.format}
                   onChange={(value) => {
-                    if (value === 'jpeg' || value === 'png' || value === 'webp') {
+                    if (value === 'jpeg' || value === 'png' || value === 'webp' || value === 'avif') {
                       updateSetting('format', value);
                     }
                   }}
@@ -218,6 +218,7 @@ export function ImageSettingsModal({
                     { value: 'jpeg', label: 'JPEG' },
                     { value: 'png', label: 'PNG' },
                     { value: 'webp', label: 'WebP' },
+                    { value: 'avif', label: 'AVIF' },
                   ]}
                 />
               </Grid.Col>

@@ -1,9 +1,11 @@
 import React, { useCallback, useState, useEffect } from "react";
 import { Upload, FileImage, Clipboard } from "lucide-react";
-import { SegmentedControl, Text, Paper, Slider, Select, Stack, Group } from '@mantine/core';
+import { SegmentedControl, Text, Paper, Slider, Select, Stack, Group, useMantineColorScheme } from '@mantine/core';
 import { ProcessingSettings } from '../../types';
 import { PresetSelector } from './PresetSelector';
 import { getPresetById, applyPreset } from '../../presets/compressionPresets';
+import { convertHeicFiles } from '../../utils/heicConverter';
+import { notifications } from '@mantine/notifications';
 
 interface ImageUploadProps {
   onFilesSelected: (files: File[]) => void;
@@ -24,6 +26,8 @@ export function ImageUpload({
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [clipboardSupported, setClipboardSupported] = useState(false);
+  const { colorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === 'dark'; // Only for logo switching
 
   useEffect(() => {
     // Check if clipboard API is available
@@ -34,31 +38,59 @@ export function ImageUpload({
     );
   }, []);
 
+  // Wrapper to handle HEIC conversion before passing files
+  const processAndSelectFiles = useCallback(
+    async (files: File[]) => {
+      // Filter for image files (including HEIC)
+      const imageFiles = files.filter((file) =>
+        file.type.startsWith("image/") ||
+        file.name.toLowerCase().endsWith('.heic') ||
+        file.name.toLowerCase().endsWith('.heif')
+      );
+
+      if (imageFiles.length === 0) {
+        return;
+      }
+
+      // Convert HEIC files if any
+      const { convertedFiles, conversionCount } = await convertHeicFiles(imageFiles);
+
+      // Show notification if HEIC files were converted
+      if (conversionCount > 0) {
+        notifications.show({
+          title: 'HEIC conversion complete',
+          message: `Converted ${conversionCount} HEIC image${conversionCount > 1 ? 's' : ''} to JPEG`,
+          color: 'green',
+        });
+      }
+
+      if (convertedFiles.length > 0) {
+        onFilesSelected(convertedFiles);
+      }
+    },
+    [onFilesSelected]
+  );
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
 
-      const files = Array.from(e.dataTransfer.files).filter((file) =>
-        file.type.startsWith("image/")
-      );
-
-      if (files.length > 0) {
-        onFilesSelected(files);
-      }
+      const files = Array.from(e.dataTransfer.files);
+      processAndSelectFiles(files);
     },
-    [onFilesSelected]
+    [processAndSelectFiles]
   );
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files || []);
       if (files.length > 0) {
-        onFilesSelected(files);
+        processAndSelectFiles(files);
       }
       e.target.value = "";
     },
-    [onFilesSelected]
+    [processAndSelectFiles]
   );
 
   const handlePasteFromClipboard = useCallback(async () => {
@@ -77,14 +109,14 @@ export function ImageUpload({
       }
 
       if (imageFiles.length > 0) {
-        onFilesSelected(imageFiles);
+        processAndSelectFiles(imageFiles);
       }
     } catch (err) {
       console.error('Failed to read clipboard:', err);
       // Try fallback paste event method
       handlePasteEvent();
     }
-  }, [onFilesSelected]);
+  }, [processAndSelectFiles]);
 
   const handlePasteEvent = useCallback(() => {
     // Listen for paste events as a fallback
@@ -104,13 +136,13 @@ export function ImageUpload({
       }
 
       if (imageFiles.length > 0) {
-        onFilesSelected(imageFiles);
+        processAndSelectFiles(imageFiles);
       }
     };
 
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
-  }, [onFilesSelected]);
+  }, [processAndSelectFiles]);
 
   useEffect(() => {
     // Set up paste event listener
@@ -134,7 +166,7 @@ export function ImageUpload({
           {/* Logo */}
           <div className="text-center">
             <img
-              src="/logo.svg"
+              src={isDark ? '/logo-darkmode.svg' : '/logo.svg'}
               alt="ImgCrush"
               style={{ height: '80px', margin: '0 auto' }}
             />
@@ -143,11 +175,11 @@ export function ImageUpload({
           {/* Drop Zone */}
           <label
             htmlFor="file-input"
-            className={`block border-2 border-dashed rounded-xl p-12 transition-all duration-200 cursor-pointer ${
-              isDragging
-                ? "border-red-500 bg-red-50"
-                : "border-gray-300 hover:border-red-400 bg-gray-50 hover:bg-gray-100/50"
-            }`}
+            className="block border-2 border-dashed rounded-xl p-12 transition-all duration-200 cursor-pointer"
+            style={{
+              borderColor: isDragging ? 'var(--color-dropzone-active-border)' : 'var(--color-dropzone-border)',
+              backgroundColor: isDragging ? 'var(--color-dropzone-active-bg)' : 'var(--color-dropzone-bg)',
+            }}
             onDragOver={(e) => {
               e.preventDefault();
               setIsDragging(true);
@@ -164,10 +196,10 @@ export function ImageUpload({
               id="file-input"
             />
 
-            <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-700 text-center mb-1">Drop images here or click to browse</p>
-            <p className="text-gray-500 text-sm text-center">
-              JPG, PNG, WebP • Multiple files • Ctrl+V to paste
+            <Upload className="w-10 h-10 text-muted mx-auto mb-3" />
+            <p className="text-primary text-center mb-1">Drop images here or click to browse</p>
+            <p className="text-tertiary text-sm text-center">
+              JPG, PNG, WebP, HEIC, AVIF • Multiple files • Ctrl+V to paste
             </p>
           </label>
 
@@ -191,7 +223,7 @@ export function ImageUpload({
             />
           </Paper>
 
-          <div className="flex items-center justify-center gap-8 text-xs text-gray-500">
+          <div className="flex items-center justify-center gap-8 text-xs text-tertiary">
             <div className="flex items-center gap-1">
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -218,13 +250,13 @@ export function ImageUpload({
 
   // Original non-minimal version for when images are loaded
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 h-full flex flex-col">
+    <div className="bg-elevated border border-primary rounded-lg p-4 h-full flex flex-col">
       <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200 flex-1 flex flex-col items-center justify-center ${
-          isDragging
-            ? "border-red-500 bg-red-50"
-            : "border-gray-300 hover:border-red-400 bg-gray-50"
-        }`}
+        className="border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200 flex-1 flex flex-col items-center justify-center"
+        style={{
+          borderColor: isDragging ? 'var(--color-dropzone-active-border)' : 'var(--color-dropzone-border)',
+          backgroundColor: isDragging ? 'var(--color-dropzone-active-bg)' : 'var(--color-dropzone-bg)',
+        }}
         onDragOver={(e) => {
           e.preventDefault();
           setIsDragging(true);
@@ -232,8 +264,8 @@ export function ImageUpload({
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
       >
-        <FileImage className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-        <p className="text-gray-700 mb-1">Drop more images here</p>
+        <FileImage className="w-8 h-8 text-muted mx-auto mb-2" />
+        <p className="text-primary mb-1">Drop more images here</p>
 
         <input
           type="file"
@@ -255,7 +287,12 @@ export function ImageUpload({
           {clipboardSupported && (
             <button
               onClick={handlePasteFromClipboard}
-              className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-elevated border border-primary text-primary text-sm font-medium rounded-md transition-colors"
+              style={{
+                backgroundColor: 'var(--color-bg-elevated)',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-hover-bg)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-bg-elevated)'}
             >
               <Clipboard className="w-4 h-4" />
             </button>

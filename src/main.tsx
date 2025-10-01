@@ -3,10 +3,11 @@ import { createRoot } from 'react-dom/client';
 import { MantineProvider, createTheme } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import App from './App.tsx';
-import './index.css';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import '@mantine/dropzone/styles.css';
+import './index.css';
+import { loadDarkMode } from './utils/settingsStorage';
 
 const theme = createTheme({
   primaryColor: 'red',
@@ -22,6 +23,18 @@ const theme = createTheme({
       '#b91c1c',  // 7
       '#991b1b',  // 8
       '#7f1d1d'   // 9 - darkest
+    ],
+    dark: [
+      '#C1C2C5',
+      '#A6A7AB',
+      '#909296',
+      '#5c5f66',
+      '#373A40',
+      '#2C2E33',
+      '#25262b',
+      '#1A1B1E',
+      '#141517',
+      '#0C0C0C',  // 9 - Custom dark background
     ]
   },
   defaultRadius: 'md',
@@ -30,7 +43,7 @@ const theme = createTheme({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={theme} defaultColorScheme={loadDarkMode() ? 'dark' : 'light'}>
       <Notifications position="top-right" />
       <App />
     </MantineProvider>
