@@ -292,9 +292,22 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
                 : splitFileName(image.originalFile.name).base}
             </Text>
             {image.outputFormat && (
-              <Badge size="sm" variant="light" color="blue" style={{ textTransform: 'uppercase' }}>
-                {image.outputFormat === 'jpeg' ? 'JPG' : image.outputFormat}
-              </Badge>
+              <Tooltip
+                label={
+                  <>
+                    <Text size="xs" fw={600}>Export Format</Text>
+                    <Text size="xs" c="dimmed">
+                      Converted from: {splitFileName(image.originalFile.name).ext.replace('.', '').toUpperCase() || 'Unknown'}
+                    </Text>
+                  </>
+                }
+                withArrow
+                position="top"
+              >
+                <Badge size="sm" variant="light" color="blue" style={{ textTransform: 'uppercase', cursor: 'help' }}>
+                  {image.outputFormat === 'jpeg' ? 'JPG' : image.outputFormat}
+                </Badge>
+              </Tooltip>
             )}
             <Tooltip label="Edit filename">
               <ActionIcon
