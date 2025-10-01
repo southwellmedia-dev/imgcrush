@@ -134,10 +134,12 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
 
       // Use custom filename if set, otherwise use original
       const originalName = image.originalFile.name;
-      const extension = originalName.substring(originalName.lastIndexOf('.'));
+      const { base, ext } = splitFileName(originalName);
       const fileName = image.customFileName
-        ? `${image.customFileName}${extension}`
-        : `compressed_${originalName}`;
+        ? `${image.customFileName}${ext}`
+        : ext
+          ? `compressed_${base}${ext}`
+          : `compressed_${base}`;
 
       a.download = fileName;
       document.body.appendChild(a);
@@ -287,7 +289,7 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
           <Group gap="xs" align="center">
             <Text size="sm" fw={500} style={{ wordBreak: 'break-word', flex: 1 }}>
               {image.customFileName
-                ? `${image.customFileName}${image.originalFile.name.substring(image.originalFile.name.lastIndexOf('.'))}`
+                ? `${image.customFileName}${splitFileName(image.originalFile.name).ext}`
                 : image.originalFile.name}
             </Text>
             <Tooltip label="Edit filename">
@@ -400,17 +402,19 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
                   <Download size={18} />
                 </ActionIcon>
               </Tooltip>
-              <Tooltip label="Crop image">
-                <ActionIcon
-                  variant="light"
-                  color="gray"
-                  size="lg"
-                  onClick={() => setShowCrop(true)}
-                  style={{ flex: 1 }}
-                >
-                  <Crop size={18} />
-                </ActionIcon>
-              </Tooltip>
+              {onCrop && (
+                <Tooltip label="Crop image">
+                  <ActionIcon
+                    variant="light"
+                    color="gray"
+                    size="lg"
+                    onClick={() => setShowCrop(true)}
+                    style={{ flex: 1 }}
+                  >
+                    <Crop size={18} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
               <Tooltip label="Adjust settings">
                 <ActionIcon
                   variant="light"
