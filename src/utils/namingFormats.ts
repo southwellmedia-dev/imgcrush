@@ -114,13 +114,15 @@ export const NAMING_FORMATS: NamingFormat[] = [
   {
     id: 'preserve-suffix',
     name: 'Preserve Original + Suffix',
-    description: 'Keep original name, add suffix (photo_optimized, vacation_optimized, ...)',
+    description: 'Keep original name, add suffix (photo_optimized_001, vacation_optimized_002, ...)',
     requiresPrefix: false,
     generate: (params: NamingFormatParams): string => {
-      const { originalName, outputFormat } = params;
+      const { originalName, outputFormat, index, totalCount, startNumber = 1 } = params;
       const baseName = stripExtension(originalName);
       const ext = getExtension(outputFormat);
-      return `${baseName}_optimized${ext}`;
+      const number = startNumber + index;
+      const paddedNumber = padNumber(number, totalCount + startNumber - 1);
+      return `${baseName}_optimized_${paddedNumber}${ext}`;
     },
   },
 ];
