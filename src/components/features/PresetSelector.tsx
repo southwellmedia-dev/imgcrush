@@ -84,17 +84,6 @@ export function PresetSelector({ selectedPreset, onPresetChange }: PresetSelecto
           </Button>
         </div>
       )}
-
-      {selectedPreset === 'custom' && (
-        <Card padding="sm" radius="md" bg="yellow.0" withBorder>
-          <Group gap="xs">
-            <Text size="xs">💡</Text>
-            <Text size="xs" c="dimmed">
-              Custom settings let you fine-tune all parameters after uploading images
-            </Text>
-          </Group>
-        </Card>
-      )}
     </Stack>
   );
 }

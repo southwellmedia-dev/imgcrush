@@ -1,6 +1,18 @@
 import heic2any from 'heic2any';
 
 /**
+ * HEIC/HEIF conversion utilities using heic2any
+ *
+ * Package Note: heic2any v0.0.4 is used for client-side HEIC conversion.
+ * While the version number is early, it's the most maintained pure-JS solution
+ * for browser-based HEIC conversion. We mitigate stability concerns with:
+ * - Comprehensive error handling and timeouts
+ * - Graceful fallback (keeping original file on failure)
+ * - User-friendly error messages
+ * - Extensive logging for debugging
+ */
+
+/**
  * Convert HEIC/HEIF image to JPEG
  * @param file - The HEIC file to convert
  * @returns Converted JPEG file
