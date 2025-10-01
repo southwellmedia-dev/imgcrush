@@ -11,6 +11,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-5.4-purple.svg)](https://vitejs.dev/)
 [![Tailwind](https://img.shields.io/badge/Tailwind-4.1-cyan.svg)](https://tailwindcss.com/)
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/southwellmedia-dev/imgcrush?utm_source=oss&utm_medium=github&utm_campaign=southwellmedia-dev%2Fimgcrush&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 [**🚀 Try it Live**](https://imgcrush.vercel.app) | [Report Bug](https://github.com/southwellmedia-dev/imgcrush/issues) | [Request Feature](https://github.com/southwellmedia-dev/imgcrush/issues)
 
