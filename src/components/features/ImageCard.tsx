@@ -528,11 +528,7 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
                     size="xl"
                     onClick={() => setShowComparison(!showComparison)}
                     className={showComparison ? "elevation-sm" : "elevation-sm btn-elevated-hover"}
-                    style={{
-                      ...ACTION_BTN_STYLES,
-                      backgroundColor: showComparison ? 'var(--color-primary-light)' : 'var(--color-bg-elevated)',
-                      color: showComparison ? 'var(--color-primary)' : 'inherit',
-                    }}
+                    style={showComparison ? ACTION_BTN_ACTIVE_STYLE : ACTION_BTN_INACTIVE_STYLE}
                   >
                     <Eye size={20} />
                   </ActionIcon>
