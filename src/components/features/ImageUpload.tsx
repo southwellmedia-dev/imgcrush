@@ -281,7 +281,7 @@ export function ImageUpload({
             <img
               src={isDark ? '/logo-darkmode.svg' : '/logo.svg'}
               alt="ImgCrush"
-              style={{ height: '90px', margin: '0 auto' }}
+              style={{ height: '68px', margin: '0 auto' }}
             />
           </div>
 

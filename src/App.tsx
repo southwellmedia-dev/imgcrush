@@ -235,8 +235,15 @@ function App() {
           // Get correct extension based on output format (not original extension!)
           const extension = getExtension(image.outputFormat, originalName);
 
-          // Sanitize the base filename (custom or compressed original)
-          const rawBaseFileName = image.customFileName || `compressed_${baseName}`;
+          // Get raw base filename (custom or compressed original)
+          let rawBaseFileName = image.customFileName || `compressed_${baseName}`;
+
+          // Strip any trailing extension that matches the output extension to prevent duplicates
+          // e.g., if customFileName is "holiday-01.jpg" and output is jpg, remove the .jpg
+          const extensionPattern = new RegExp(`\\${extension}$`, 'i');
+          rawBaseFileName = rawBaseFileName.replace(extensionPattern, '');
+
+          // Sanitize the base filename
           const sanitizedBaseFileName = sanitizeFilename(rawBaseFileName);
 
           // Generate unique filename to prevent overwrites

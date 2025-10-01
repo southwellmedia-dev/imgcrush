@@ -149,7 +149,7 @@ export function Sidebar({ onReset, hasImages, onCollapsedChange, onOpenSettings,
               animate={{ opacity: 1, x: 0 }}
               exit={hasInteracted ? { opacity: 0, x: -10 } : { opacity: 1, x: 0 }}
               transition={{ duration: hasInteracted ? 0.2 : 0 }}
-              style={{ height: '40px', cursor: 'pointer' }}
+              style={{ height: '30px', cursor: 'pointer' }}
               onClick={onReset}
               whileHover={{
                 scale: 1.05,

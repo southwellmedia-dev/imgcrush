@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Download, X, Loader, Check, ArrowRight, Maximize2, FileType, Percent, AlertTriangle, RefreshCw, Eye, Settings2, Crop, Edit2, Save, XCircle, GripVertical } from 'lucide-react';
 import { Card, Image as MantineImage, Text, Button, Group, Stack, Badge, Paper, Progress, Tooltip, ActionIcon, Alert, Modal, TextInput } from '@mantine/core';
 import { motion } from 'framer-motion';
@@ -7,6 +7,8 @@ import { formatFileSize } from '../../utils/fileUtils';
 import { ImageComparison } from '../comparison/ImageComparison';
 import { ImageSettingsModal } from '../modals/ImageSettingsModal';
 import { CropModal } from '../modals/CropModal';
+import { useImageBlobUrls } from '../../hooks/useImageBlobUrls';
+import { useFilenameEditor } from '../../hooks/useFilenameEditor';
 
 // Static styles extracted outside component to prevent re-creation on every render
 const CARD_STYLES = {
@@ -51,6 +53,16 @@ const ACTION_BTN_STYLES = {
   height: '44px',
 };
 
+const ACTION_BTN_ACTIVE_STYLE = {
+  ...ACTION_BTN_STYLES,
+  backgroundColor: 'var(--color-primary-light)',
+};
+
+const ACTION_BTN_INACTIVE_STYLE = {
+  ...ACTION_BTN_STYLES,
+  backgroundColor: 'var(--color-bg-elevated)',
+};
+
 const COMPARISON_MODAL_STYLES = {
   header: {
     backgroundColor: 'var(--color-bg-elevated)',
@@ -76,112 +88,22 @@ interface ImageCardProps {
 }
 
 export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSettings, onUpdateSettings, onApplyToAll, onUpdateFileName, dragHandleProps, isDragging }: ImageCardProps) {
-  const [originalUrl, setOriginalUrl] = useState<string | null>(null);
-  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
-  const [originalDimensions, setOriginalDimensions] = useState<{ width: number; height: number } | null>(null);
-  const [processedDimensions, setProcessedDimensions] = useState<{ width: number; height: number } | null>(null);
+  // Modal state
   const [showComparison, setShowComparison] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
 
-  // Filename editing state
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editedFileName, setEditedFileName] = useState('');
+  // Custom hooks for blob URL and filename management
+  const { originalUrl, processedUrl, originalDimensions, processedDimensions } = useImageBlobUrls(
+    image.originalFile,
+    image.processedBlob
+  );
 
-  // Use refs to track blob URLs and prevent double-revocation in StrictMode
-  const originalUrlRef = useRef<string | null>(null);
-  const processedUrlRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    // Validate the file before creating blob URL
-    if (!image.originalFile || !(image.originalFile instanceof Blob)) {
-      console.error('Invalid originalFile:', image.originalFile);
-      return;
+  const filenameEditor = useFilenameEditor((newName) => {
+    if (onUpdateFileName) {
+      onUpdateFileName(image.id, newName);
     }
-
-    // Revoke old URL if it exists (only when dependency changes)
-    if (originalUrlRef.current) {
-      URL.revokeObjectURL(originalUrlRef.current);
-    }
-
-    const url = URL.createObjectURL(image.originalFile);
-    originalUrlRef.current = url;
-    setOriginalUrl(url);
-
-    // Get original image dimensions
-    const img = new Image();
-    img.onload = () => {
-      setOriginalDimensions({ width: img.width, height: img.height });
-    };
-    img.onerror = (e) => {
-      console.error('Failed to load original image dimensions:', {
-        url,
-        fileName: image.originalFile.name,
-        fileSize: image.originalFile.size,
-        fileType: image.originalFile.type,
-        error: e
-      });
-    };
-    img.src = url;
-
-    // Don't revoke in cleanup - let it persist for StrictMode compatibility
-  }, [image.originalFile]);
-
-  useEffect(() => {
-    if (image.processedBlob) {
-      // Validate the blob before creating URL
-      if (!(image.processedBlob instanceof Blob)) {
-        console.error('Invalid processedBlob:', image.processedBlob);
-        return;
-      }
-
-      // Revoke old URL if it exists (only when dependency changes)
-      if (processedUrlRef.current) {
-        URL.revokeObjectURL(processedUrlRef.current);
-      }
-
-      const url = URL.createObjectURL(image.processedBlob);
-      processedUrlRef.current = url;
-      setProcessedUrl(url);
-
-      // Get processed image dimensions
-      const img = new Image();
-      img.onload = () => {
-        setProcessedDimensions({ width: img.width, height: img.height });
-      };
-      img.onerror = (e) => {
-        console.error('Failed to load processed image dimensions:', {
-          url,
-          blobSize: image.processedBlob.size,
-          blobType: image.processedBlob.type,
-          error: e
-        });
-      };
-      img.src = url;
-
-      // Don't revoke in cleanup - let it persist for StrictMode compatibility
-    } else {
-      // Clean up when processedBlob becomes null (reprocessing, reset, etc.)
-      if (processedUrlRef.current) {
-        URL.revokeObjectURL(processedUrlRef.current);
-        processedUrlRef.current = null;
-      }
-      setProcessedUrl(null);
-      setProcessedDimensions(null);
-    }
-  }, [image.processedBlob]);
-
-  // Cleanup blob URLs only on component unmount
-  useEffect(() => {
-    return () => {
-      if (originalUrlRef.current) {
-        URL.revokeObjectURL(originalUrlRef.current);
-      }
-      if (processedUrlRef.current) {
-        URL.revokeObjectURL(processedUrlRef.current);
-      }
-    };
-  }, []); // Empty deps = only runs cleanup on unmount
+  });
 
   const handleDownload = () => {
     if (image.processedBlob) {
@@ -218,23 +140,9 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
   };
 
   const handleEditFileName = () => {
-    // Get filename without extension
     const originalName = image.originalFile.name;
     const { base } = splitFileName(originalName);
-    setEditedFileName(image.customFileName || base);
-    setIsEditingName(true);
-  };
-
-  const handleSaveFileName = () => {
-    if (onUpdateFileName && editedFileName.trim()) {
-      onUpdateFileName(image.id, editedFileName.trim());
-    }
-    setIsEditingName(false);
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingName(false);
-    setEditedFileName('');
+    filenameEditor.startEditing(image.customFileName || base);
   };
 
   const handleCropComplete = (croppedBlob: Blob, croppedFileName: string) => {
@@ -361,17 +269,17 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
 
       <Stack gap="lg" style={{ padding: '20px' }}>
         {/* Filename with inline editing */}
-        {isEditingName ? (
+        {filenameEditor.isEditing ? (
           <Group gap="xs" align="center">
             <TextInput
-              value={editedFileName}
-              onChange={(e) => setEditedFileName(e.target.value)}
+              value={filenameEditor.editedName}
+              onChange={(e) => filenameEditor.updateName(e.target.value)}
               size="sm"
               style={{ flex: 1 }}
               placeholder="Enter filename"
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveFileName();
-                if (e.key === 'Escape') handleCancelEdit();
+                if (e.key === 'Enter') filenameEditor.saveName();
+                if (e.key === 'Escape') filenameEditor.cancelEditing();
               }}
               autoFocus
             />
@@ -379,7 +287,7 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
               variant="filled"
               color="green"
               size="sm"
-              onClick={handleSaveFileName}
+              onClick={filenameEditor.saveName}
             >
               <Save size={14} />
             </ActionIcon>
@@ -387,7 +295,7 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
               variant="filled"
               color="gray"
               size="sm"
-              onClick={handleCancelEdit}
+              onClick={filenameEditor.cancelEditing}
             >
               <XCircle size={14} />
             </ActionIcon>
