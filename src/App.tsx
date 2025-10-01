@@ -109,6 +109,21 @@ function App() {
     );
   }, []);
 
+  const handleBulkRename = useCallback((renamedFiles: Map<string, string>) => {
+    setProcessedImages((prev) =>
+      prev.map((img) => {
+        const newFileName = renamedFiles.get(img.id);
+        return newFileName ? { ...img, customFileName: newFileName } : img;
+      })
+    );
+
+    notifications.show({
+      title: 'Files Renamed',
+      message: `Successfully renamed ${renamedFiles.size} ${renamedFiles.size === 1 ? 'file' : 'files'}`,
+      color: 'green',
+    });
+  }, []);
+
   const regenerateAllImages = useCallback(() => {
     // Reset all images to unprocessed state to trigger reprocessing
     setProcessedImages((prev) =>
@@ -325,6 +340,7 @@ function App() {
                   onClearAll={handleClearAll}
                   onReorderImages={handleReorderImages}
                   onUpdateFileName={handleUpdateFileName}
+                  onBulkRename={handleBulkRename}
                   viewMode={viewMode}
                 />
 
