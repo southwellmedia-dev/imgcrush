@@ -73,6 +73,7 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
   const totalSaved = totalOriginalSize - totalProcessedSize;
   const compressionRatio =
     totalOriginalSize > 0 ? (totalSaved / totalOriginalSize) * 100 : 0;
+  const formattedSaved = `${totalSaved >= 0 ? '' : '+'}${formatFileSize(Math.abs(totalSaved))}`;
 
   // Only show batch download for multiple images
   if (processedImages.length <= 1) return null;
@@ -189,7 +190,7 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
                   style={{ backgroundColor: "#10b981", color: "white" }}
                   size="lg"
                 >
-                  {formatFileSize(totalSaved)}
+                  {formattedSaved}
                 </Badge>
               </Group>
             </Paper>

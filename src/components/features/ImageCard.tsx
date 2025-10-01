@@ -103,6 +103,14 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
       img.src = url;
 
       // Don't revoke in cleanup - let it persist for StrictMode compatibility
+    } else {
+      // Clean up when processedBlob becomes null (reprocessing, reset, etc.)
+      if (processedUrlRef.current) {
+        URL.revokeObjectURL(processedUrlRef.current);
+        processedUrlRef.current = null;
+      }
+      setProcessedUrl(null);
+      setProcessedDimensions(null);
     }
   }, [image.processedBlob]);
 
@@ -139,11 +147,22 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
     }
   };
 
+  const splitFileName = (fileName: string) => {
+    const lastDot = fileName.lastIndexOf('.');
+    if (lastDot <= 0 || lastDot === fileName.length - 1) {
+      return { base: fileName, ext: '' };
+    }
+    return {
+      base: fileName.substring(0, lastDot),
+      ext: fileName.substring(lastDot),
+    };
+  };
+
   const handleEditFileName = () => {
     // Get filename without extension
     const originalName = image.originalFile.name;
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    setEditedFileName(image.customFileName || nameWithoutExt);
+    const { base } = splitFileName(originalName);
+    setEditedFileName(image.customFileName || base);
     setIsEditingName(true);
   };
 
@@ -157,6 +176,13 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
   const handleCancelEdit = () => {
     setIsEditingName(false);
     setEditedFileName('');
+  };
+
+  const handleCropComplete = (croppedBlob: Blob, croppedFileName: string) => {
+    if (onCrop) {
+      onCrop(croppedBlob, croppedFileName);
+    }
+    setShowCrop(false);
   };
 
   const compressionRatio = image.processedSize > 0
@@ -374,6 +400,17 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
                   <Download size={18} />
                 </ActionIcon>
               </Tooltip>
+              <Tooltip label="Crop image">
+                <ActionIcon
+                  variant="light"
+                  color="gray"
+                  size="lg"
+                  onClick={() => setShowCrop(true)}
+                  style={{ flex: 1 }}
+                >
+                  <Crop size={18} />
+                </ActionIcon>
+              </Tooltip>
               <Tooltip label="Adjust settings">
                 <ActionIcon
                   variant="light"
@@ -420,6 +457,18 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
             globalSettings={globalSettings}
             onSave={onUpdateSettings}
             onApplyToAll={onApplyToAll}
+          />
+        )}
+
+        {/* Crop Modal */}
+        {onCrop && processedUrl && (
+          <CropModal
+            opened={showCrop}
+            onClose={() => setShowCrop(false)}
+            imageUrl={processedUrl}
+            imageName={image.originalFile.name}
+            imageFormat={image.outputFormat}
+            onCropComplete={handleCropComplete}
           />
         )}
 

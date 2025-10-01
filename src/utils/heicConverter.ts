@@ -7,14 +7,35 @@ import heic2any from 'heic2any';
  */
 export async function convertHeicToJpeg(file: File): Promise<File> {
   try {
-    const convertedBlob = await heic2any({
+    // Validate input
+    if (!file || !(file instanceof Blob)) {
+      throw new Error('Invalid file input');
+    }
+
+    if (file.size === 0) {
+      throw new Error('File is empty');
+    }
+
+    // Attempt conversion with timeout protection
+    const conversionPromise = heic2any({
       blob: file,
       toType: 'image/jpeg',
       quality: 0.95, // High quality for initial conversion
     });
 
+    // Add 30-second timeout for large files
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Conversion timeout exceeded')), 30000);
+    });
+
+    const convertedBlob = await Promise.race([conversionPromise, timeoutPromise]);
+
     // heic2any can return Blob or Blob[], we always request single conversion
     const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+
+    if (!blob || blob.size === 0) {
+      throw new Error('Conversion produced empty result');
+    }
 
     // Create a new File object from the converted blob
     const originalName = file.name.replace(/\.heic$/i, '').replace(/\.heif$/i, '');
@@ -25,8 +46,24 @@ export async function convertHeicToJpeg(file: File): Promise<File> {
 
     return convertedFile;
   } catch (error) {
-    console.error('HEIC conversion error:', error);
-    throw new Error('Failed to convert HEIC image. The file may be corrupted or unsupported.');
+    // Enhanced error logging with context
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('HEIC conversion failed:', {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      error: errorMessage,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Provide user-friendly error message
+    if (errorMessage.includes('timeout')) {
+      throw new Error(`HEIC conversion timeout: ${file.name} is too large or complex`);
+    } else if (errorMessage.includes('empty')) {
+      throw new Error(`HEIC conversion failed: ${file.name} appears to be empty or corrupted`);
+    } else {
+      throw new Error(`HEIC conversion failed: ${file.name} may be corrupted or in an unsupported format`);
+    }
   }
 }
 
@@ -68,7 +105,8 @@ export async function convertHeicFiles(files: File[]): Promise<{
         conversionCount++;
       } catch (error) {
         console.error(`Failed to convert ${file.name}:`, error);
-        // Skip the file if conversion fails
+        // Keep the original file so the caller can still handle it
+        convertedFiles.push(file);
       }
     } else {
       // Keep non-HEIC files as-is

@@ -30,6 +30,7 @@ interface SortableImageCardProps {
   image: ProcessedImage;
   onRemove: () => void;
   onRegenerate?: () => void;
+  onCrop?: (croppedBlob: Blob, croppedFileName: string) => void;
   globalSettings: ProcessingSettings;
   onUpdateSettings?: (imageId: string, settings: ProcessingSettings) => void;
   onApplyToAll?: (settings: ProcessingSettings) => void;
@@ -84,12 +85,6 @@ function SortableImageCard(props: SortableImageCardProps) {
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            // The keyboard sensor from @dnd-kit handles arrow key navigation
-          }
         }}
       >
         <GripVertical size={16} color="white" aria-hidden="true" />
@@ -164,6 +159,15 @@ export function ImageProcessor({
     });
   };
 
+  const handleCrop = (imageId: string) => (croppedBlob: Blob, croppedFileName: string) => {
+    // Update the image with the cropped version
+    onUpdateImage(imageId, {
+      processedBlob: croppedBlob,
+      processedSize: croppedBlob.size,
+      customFileName: croppedFileName.replace(/\.[^/.]+$/, ''), // Remove extension
+    });
+  };
+
   useEffect(() => {
     images.forEach(async (image) => {
       if (!image.processed && !image.processing) {
@@ -224,6 +228,7 @@ export function ImageProcessor({
                     image={image}
                     onRemove={() => onRemoveImage(image.id)}
                     onRegenerate={() => regenerateImage(image.id)}
+                    onCrop={handleCrop(image.id)}
                     globalSettings={settings}
                     onUpdateSettings={onUpdateImageSettings}
                     onApplyToAll={onApplyToAll}

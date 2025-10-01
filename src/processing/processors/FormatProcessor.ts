@@ -10,7 +10,7 @@ export class FormatProcessor implements Processor {
   async process(context: ProcessingContext): Promise<ProcessingContext> {
     // Format conversion happens during blob generation
     // This processor ensures format settings are valid
-    const validFormats = ['jpeg', 'png', 'webp'];
+    const validFormats = ['jpeg', 'png', 'webp', 'avif'];
     if (!validFormats.includes(context.settings.format)) {
       context.settings.format = 'jpeg';
     }

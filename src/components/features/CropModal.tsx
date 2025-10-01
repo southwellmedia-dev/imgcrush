@@ -40,7 +40,6 @@ export function CropModal({ opened, onClose, imageUrl, imageName, imageFormat, o
 
     return new Promise((resolve, reject) => {
       const image = new Image();
-      image.src = imageUrl;
 
       image.onload = () => {
         const canvas = document.createElement('canvas');
@@ -96,6 +95,9 @@ export function CropModal({ opened, onClose, imageUrl, imageName, imageFormat, o
       };
 
       image.onerror = () => reject(new Error('Failed to load image'));
+
+      // Set src after handlers are registered to avoid race condition
+      image.src = imageUrl;
     });
   };
 
