@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Modal,
   Stack,
@@ -32,14 +32,18 @@ export function BulkRenameModal({ opened, onClose, images, onApply }: BulkRename
   // Get current format
   const currentFormat = NAMING_FORMATS.find((f) => f.id === selectedFormat);
 
+  // Memoize image data transformation to avoid recalculating on every render
+  const imageData = useMemo(() =>
+    images.map((img) => ({
+      originalName: img.originalFile.name,
+      outputFormat: img.outputFormat || 'jpeg',
+    })),
+    [images]
+  );
+
   // Update preview whenever settings change
   useEffect(() => {
     if (!opened) return;
-
-    const imageData = images.map((img) => ({
-      originalName: img.originalFile.name,
-      outputFormat: img.outputFormat || 'jpeg',
-    }));
 
     const previewNames = generatePreview(selectedFormat, imageData, {
       prefix: customPrefix,
@@ -48,16 +52,16 @@ export function BulkRenameModal({ opened, onClose, images, onApply }: BulkRename
     });
 
     setPreview(previewNames);
-  }, [opened, selectedFormat, customPrefix, startNumber, images]);
+  }, [opened, selectedFormat, customPrefix, startNumber, imageData]);
 
   const handleApply = () => {
-    const imageData = images.map((img) => ({
+    const imageDataWithIds = images.map((img) => ({
       id: img.id,
       originalName: img.originalFile.name,
       outputFormat: img.outputFormat || 'jpeg',
     }));
 
-    const renamedFiles = bulkRename(selectedFormat, imageData, {
+    const renamedFiles = bulkRename(selectedFormat, imageDataWithIds, {
       prefix: customPrefix,
       startNumber,
     });

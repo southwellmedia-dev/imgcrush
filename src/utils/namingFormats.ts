@@ -92,8 +92,8 @@ export const NAMING_FORMATS: NamingFormat[] = [
       const number = startNumber + index;
       const paddedNumber = padNumber(number, totalCount + startNumber - 1);
       const ext = getExtension(outputFormat);
-      // Sanitize prefix (remove invalid characters)
-      const sanitizedPrefix = prefix.replace(/[^a-zA-Z0-9_-]/g, '_');
+      // Sanitize prefix (remove invalid characters, preserve Unicode letters/numbers)
+      const sanitizedPrefix = prefix.replace(/[^\p{L}\p{N}_-]/gu, '_');
       return `${sanitizedPrefix}_${paddedNumber}${ext}`;
     },
   },
