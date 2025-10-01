@@ -41,6 +41,22 @@ export function ImageUpload({
   // Wrapper to handle HEIC conversion before passing files
   const processAndSelectFiles = useCallback(
     async (files: File[]) => {
+      // Validation constants
+      const MAX_FILE_SIZE = 75 * 1024 * 1024; // 75MB per file
+      const MAX_TOTAL_SIZE = 500 * 1024 * 1024; // 500MB total
+      const MAX_FILE_COUNT = 100; // Maximum 100 files
+      const MAX_FILENAME_LENGTH = 255;
+
+      // File count validation
+      if (files.length > MAX_FILE_COUNT) {
+        notifications.show({
+          title: 'Too many files',
+          message: `Maximum ${MAX_FILE_COUNT} files allowed. Please select fewer files.`,
+          color: 'red',
+        });
+        return;
+      }
+
       // Filter for image files (including HEIC)
       const imageFiles = files.filter((file) =>
         file.type.startsWith("image/") ||
@@ -49,6 +65,59 @@ export function ImageUpload({
       );
 
       if (imageFiles.length === 0) {
+        notifications.show({
+          title: 'No valid images',
+          message: 'Please select valid image files (JPG, PNG, WebP, HEIC, AVIF, etc.)',
+          color: 'yellow',
+        });
+        return;
+      }
+
+      // Validate individual file sizes and filenames
+      const invalidFiles = [];
+      const invalidFilenames = [];
+      let totalSize = 0;
+
+      for (const file of imageFiles) {
+        // File size validation
+        if (file.size > MAX_FILE_SIZE) {
+          invalidFiles.push(`${file.name} (${Math.round(file.size / 1024 / 1024)}MB)`);
+        }
+
+        // Filename length validation
+        if (file.name.length > MAX_FILENAME_LENGTH) {
+          invalidFilenames.push(file.name.substring(0, 50) + '...');
+        }
+
+        totalSize += file.size;
+      }
+
+      // Show errors for invalid files
+      if (invalidFiles.length > 0) {
+        notifications.show({
+          title: 'Files too large',
+          message: `Maximum 75MB per file. Invalid: ${invalidFiles.join(', ')}`,
+          color: 'red',
+        });
+        return;
+      }
+
+      if (invalidFilenames.length > 0) {
+        notifications.show({
+          title: 'Filenames too long',
+          message: `Maximum 255 characters per filename. Please rename: ${invalidFilenames.join(', ')}`,
+          color: 'red',
+        });
+        return;
+      }
+
+      // Total size validation
+      if (totalSize > MAX_TOTAL_SIZE) {
+        notifications.show({
+          title: 'Total size too large',
+          message: `Maximum 500MB total. Current: ${Math.round(totalSize / 1024 / 1024)}MB. Please select fewer files.`,
+          color: 'red',
+        });
         return;
       }
 

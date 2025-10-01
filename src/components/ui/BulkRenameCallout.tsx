@@ -9,14 +9,16 @@ interface BulkRenameCalloutProps {
 }
 
 export function BulkRenameCallout({ imageCount, onOpenRename }: BulkRenameCalloutProps) {
-  if (imageCount < 2) return null;
-
+  // Hooks must be called before any early returns
   const shouldReduceMotion = useReducedMotion();
   const isFirstRender = useRef(true);
 
   useEffect(() => {
     isFirstRender.current = false;
   }, []);
+
+  // Early return after all hooks
+  if (imageCount < 2) return null;
 
   const shouldAnimate = !isFirstRender.current && !shouldReduceMotion;
 

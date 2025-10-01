@@ -46,7 +46,7 @@ function App() {
     setProcessedImages((prev) => [
       ...prev,
       ...newFiles.map((file) => ({
-        id: Math.random().toString(36),
+        id: crypto.randomUUID(),
         originalFile: file,
         originalSize: file.size,
         processedBlob: null,
@@ -169,6 +169,22 @@ function App() {
 
     try {
       const zip = new JSZip();
+      const usedFilenames = new Set<string>();
+
+      // Helper function to generate unique filename
+      const getUniqueFilename = (baseName: string, extension: string): string => {
+        let filename = `${baseName}${extension}`;
+        let counter = 1;
+
+        // If filename already used, append (1), (2), etc.
+        while (usedFilenames.has(filename)) {
+          filename = `${baseName} (${counter})${extension}`;
+          counter++;
+        }
+
+        usedFilenames.add(filename);
+        return filename;
+      };
 
       processedImagesOnly.forEach((image) => {
         if (image.processedBlob) {
@@ -176,10 +192,11 @@ function App() {
           const lastDot = originalName.lastIndexOf('.');
           const baseName = lastDot > 0 ? originalName.substring(0, lastDot) : originalName;
           const extension = lastDot > 0 ? originalName.substring(lastDot) : '';
-          const fileName = image.customFileName
-            ? `${image.customFileName}${extension}`
-            : `compressed_${baseName}${extension}`;
-          zip.file(fileName, image.processedBlob);
+
+          const baseFileName = image.customFileName || `compressed_${baseName}`;
+          const uniqueFilename = getUniqueFilename(baseFileName, extension);
+
+          zip.file(uniqueFilename, image.processedBlob);
         }
       });
 
