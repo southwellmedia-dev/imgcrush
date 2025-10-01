@@ -804,3 +804,129 @@ input[type="range"]:focus::-moz-range-thumb {
 .animate-delay-400 {
   animation-delay: 400ms;
 }
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS - Button & Interactive Hover States
+   ============================================ */
+
+/* Button Variants with CSS-only Hover */
+.btn-primary-hover {
+  background-color: var(--color-primary);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-primary-hover:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-success-hover {
+  background-color: var(--color-success);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-success-hover:hover {
+  background-color: #0ea574;
+  transform: translateY(-1px);
+}
+
+.btn-elevated-hover {
+  background-color: var(--color-bg-elevated);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-elevated-hover:hover {
+  background-color: var(--color-hover-bg);
+  transform: translateY(-1px);
+}
+
+/* Action Icon Variants */
+.action-icon-hover {
+  background-color: var(--color-bg-elevated);
+  transition: background-color 0.2s ease;
+}
+
+.action-icon-hover:hover {
+  background-color: var(--color-hover-bg);
+}
+
+.action-icon-primary-hover {
+  background-color: var(--color-primary);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.action-icon-primary-hover:hover {
+  background-color: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.action-icon-scale-hover {
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.action-icon-scale-hover:hover {
+  background-color: var(--color-hover-bg);
+  transform: translateY(-1px);
+}
+
+/* Drag Handle / Interactive Elements */
+.drag-handle {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.drag-handle:hover {
+  background-color: rgba(100, 100, 100, 0.8);
+  transform: scale(1.1);
+}
+
+.drag-handle-dark {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.drag-handle-dark:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+  transform: scale(1.05);
+}
+
+/* Remove Button Hover */
+.remove-btn-hover {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.remove-btn-hover:hover {
+  background-color: rgba(239, 68, 68, 0.9);
+  transform: scale(1.1);
+}
+
+/* Sidebar Nav Item Hover */
+.nav-item-hover {
+  transition: background-color 0.2s ease;
+}
+
+.nav-item-hover:not(.active):not(:disabled):hover {
+  background-color: var(--color-hover-bg);
+}
+
+/* GitHub Link Hover */
+.github-link-hover {
+  transition: background-color 0.2s ease;
+}
+
+.github-link-hover:hover {
+  background-color: var(--color-hover-bg);
+}
+
+/* Logo Scale Hover */
+.logo-hover {
+  transition: transform 0.2s ease;
+}
+
+.logo-hover:hover {
+  transform: scale(1.05);
+}

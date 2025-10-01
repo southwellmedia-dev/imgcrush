@@ -65,29 +65,19 @@ function SortableImageCard(props: SortableImageCardProps) {
         tabIndex={0}
         aria-label="Drag to reorder image"
         aria-roledescription="draggable"
+        className="drag-handle-dark"
         style={{
           position: "absolute",
           top: "12px",
           right: "60px", // Position to the left of the delete button (12px + 40px button + 8px gap)
           zIndex: 10,
           cursor: isDragging ? "grabbing" : "grab",
-          backgroundColor: "rgba(0, 0, 0, 0.6)",
-          backdropFilter: "blur(8px)",
           borderRadius: "10px",
           width: "40px",
           height: "40px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          transition: "background-color 0.2s, transform 0.2s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-          e.currentTarget.style.transform = "scale(1.05)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.6)";
-          e.currentTarget.style.transform = "scale(1)";
         }}
       >
         <GripVertical size={18} color="white" aria-hidden="true" />

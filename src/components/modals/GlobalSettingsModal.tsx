@@ -13,6 +13,24 @@ interface GlobalSettingsModalProps {
   onRegenerateAll?: () => void;
 }
 
+// Static styles extracted outside component to prevent re-creation on every render
+const MODAL_STYLES = {
+  header: {
+    backgroundColor: 'var(--color-bg-elevated)',
+  },
+  body: {
+    backgroundColor: 'var(--color-bg-elevated)',
+    maxHeight: '70vh',
+    overflowY: 'auto' as const,
+  },
+};
+
+const BUTTON_STYLES = {
+  borderRadius: '10px',
+  fontWeight: 600,
+  height: '44px',
+};
+
 export function GlobalSettingsModal({
   opened,
   onClose,
@@ -46,16 +64,7 @@ export function GlobalSettingsModal({
       title="Global Processing Settings"
       size="xl"
       centered
-      styles={{
-        header: {
-          backgroundColor: 'var(--color-bg-elevated)',
-        },
-        body: {
-          backgroundColor: 'var(--color-bg-elevated)',
-          maxHeight: '70vh',
-          overflowY: 'auto',
-        },
-      }}
+      styles={MODAL_STYLES}
     >
       <Stack gap="lg">
         <ProcessingControls
@@ -73,21 +82,8 @@ export function GlobalSettingsModal({
           size="md"
           fullWidth
           onClick={handleSave}
-          className="elevation-md transition-smooth"
-          style={{
-            backgroundColor: 'var(--color-primary)',
-            borderRadius: '10px',
-            fontWeight: 600,
-            height: '44px',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
-            e.currentTarget.style.transform = 'translateY(-1px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
+          className="elevation-md btn-primary-hover"
+          style={BUTTON_STYLES}
         >
           Apply Settings & Regenerate All
         </Button>

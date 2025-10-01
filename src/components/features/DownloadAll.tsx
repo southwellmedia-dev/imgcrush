@@ -15,6 +15,30 @@ import { ProcessedImage } from "../../types";
 import { formatFileSize } from "../../utils/fileUtils";
 import { BulkRenameModal } from "./BulkRenameModal";
 
+// Static styles extracted outside component to prevent re-creation on every render
+const CONTAINER_STYLES = {
+  padding: '24px',
+  borderRadius: '12px',
+  border: '1px solid var(--color-border-glass)',
+};
+
+const STATS_BOX_STYLES = {
+  padding: '16px',
+  borderRadius: '12px',
+  border: '1px solid var(--color-border-glass)',
+};
+
+const SPACE_SAVED_BOX_STYLES = {
+  padding: '16px',
+  borderRadius: '12px',
+  background: 'var(--color-success)',
+};
+
+const BUTTON_STYLES = {
+  borderRadius: '10px',
+  fontWeight: 600,
+};
+
 interface DownloadAllProps {
   images: ProcessedImage[];
   onBulkRename?: (renamedFiles: Map<string, string>) => void;
@@ -84,11 +108,7 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
   return (
     <div
       className="glass-strong elevation-lg"
-      style={{
-        padding: '24px',
-        borderRadius: '12px',
-        border: '1px solid var(--color-border-glass)',
-      }}
+      style={CONTAINER_STYLES}
       data-tour="batch-download"
     >
       <Stack gap="lg">
@@ -121,14 +141,7 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
 
         {/* Stats Grid */}
         <Group gap="lg" grow>
-          <div
-            className="glass elevation-sm"
-            style={{
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid var(--color-border-glass)',
-            }}
-          >
+          <div className="glass elevation-sm" style={STATS_BOX_STYLES}>
             <Stack gap="xs">
               <Text size="xs" fw={600} tt="uppercase" style={{ letterSpacing: "0.5px", color: 'var(--color-text-tertiary)' }}>
                 Original Size
@@ -139,14 +152,7 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
             </Stack>
           </div>
 
-          <div
-            className="glass elevation-sm"
-            style={{
-              padding: '16px',
-              borderRadius: '12px',
-              border: '1px solid var(--color-border-glass)',
-            }}
-          >
+          <div className="glass elevation-sm" style={STATS_BOX_STYLES}>
             <Stack gap="xs">
               <Text size="xs" fw={600} tt="uppercase" style={{ letterSpacing: "0.5px", color: 'var(--color-text-tertiary)' }}>
                 Optimized Size
@@ -157,14 +163,7 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
             </Stack>
           </div>
 
-          <div
-            className="elevation-md"
-            style={{
-              padding: '16px',
-              borderRadius: '12px',
-              background: 'var(--color-success)',
-            }}
-          >
+          <div className="elevation-md" style={SPACE_SAVED_BOX_STYLES}>
             <Stack gap="xs">
               <Text size="xs" fw={600} tt="uppercase" style={{ color: "rgba(255, 255, 255, 0.9)", letterSpacing: "0.5px" }}>
                 Space Saved
@@ -230,21 +229,8 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
             rightSection={<Package size={16} />}
             onClick={handleDownloadAll}
             variant="filled"
-            className="elevation-md transition-smooth"
-            style={{
-              marginLeft: "auto",
-              backgroundColor: 'var(--color-primary)',
-              borderRadius: '10px',
-              fontWeight: 600,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
+            className="elevation-md btn-primary-hover"
+            style={{ ...BUTTON_STYLES, marginLeft: "auto" }}
           >
             Download All as ZIP
           </Button>

@@ -7,6 +7,16 @@ import { ProcessedImage } from '../../types';
 import { formatFileSize } from '../../utils/fileUtils';
 import { getPresetById } from '../../presets/compressionPresets';
 
+// Static styles extracted outside component to prevent re-creation on every render
+const HEADER_STYLES = {
+  padding: '20px 24px',
+  borderRadius: '12px',
+};
+
+const ACTION_ICON_STYLES = {
+  borderRadius: '10px',
+};
+
 // Animated number component
 function AnimatedNumber({ value }: { value: number }) {
   const motionValue = useMotionValue(0);
@@ -106,10 +116,7 @@ export function ResultsAreaHeader({
       initial={shouldAnimate ? { opacity: 0, y: -20 } : { opacity: 1, y: 0 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: shouldAnimate ? 0.3 : 0 }}
-      style={{
-        padding: '20px 24px',
-        borderRadius: '12px',
-      }}
+      style={HEADER_STYLES}
     >
       <Group justify="space-between" align="center">
         {/* Left: Compression Stats */}
@@ -230,17 +237,11 @@ export function ResultsAreaHeader({
               variant="subtle"
               size="lg"
               onClick={() => onViewModeChange('grid')}
-              className="transition-smooth elevation-sm"
+              className={viewMode === 'grid' ? "elevation-sm" : "elevation-sm action-icon-hover"}
               style={{
+                ...ACTION_ICON_STYLES,
                 backgroundColor: viewMode === 'grid' ? 'var(--color-primary-light)' : 'var(--color-bg-elevated)',
                 color: viewMode === 'grid' ? 'var(--color-primary)' : 'var(--color-text-primary)',
-                borderRadius: '10px',
-              }}
-              onMouseEnter={(e) => {
-                if (viewMode !== 'grid') e.currentTarget.style.backgroundColor = 'var(--color-hover-bg)';
-              }}
-              onMouseLeave={(e) => {
-                if (viewMode !== 'grid') e.currentTarget.style.backgroundColor = 'var(--color-bg-elevated)';
               }}
             >
               <Grid3x3 size={20} />
@@ -252,17 +253,11 @@ export function ResultsAreaHeader({
               variant="subtle"
               size="lg"
               onClick={() => onViewModeChange('list')}
-              className="transition-smooth elevation-sm"
+              className={viewMode === 'list' ? "elevation-sm" : "elevation-sm action-icon-hover"}
               style={{
+                ...ACTION_ICON_STYLES,
                 backgroundColor: viewMode === 'list' ? 'var(--color-primary-light)' : 'var(--color-bg-elevated)',
                 color: viewMode === 'list' ? 'var(--color-primary)' : 'var(--color-text-primary)',
-                borderRadius: '10px',
-              }}
-              onMouseEnter={(e) => {
-                if (viewMode !== 'list') e.currentTarget.style.backgroundColor = 'var(--color-hover-bg)';
-              }}
-              onMouseLeave={(e) => {
-                if (viewMode !== 'list') e.currentTarget.style.backgroundColor = 'var(--color-bg-elevated)';
               }}
             >
               <List size={20} />
@@ -278,19 +273,8 @@ export function ResultsAreaHeader({
                   variant="filled"
                   size="lg"
                   onClick={onDownloadAll}
-                  className="transition-smooth elevation-md"
-                  style={{
-                    backgroundColor: 'var(--color-primary)',
-                    borderRadius: '10px',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
+                  className="elevation-md action-icon-primary-hover"
+                  style={ACTION_ICON_STYLES}
                 >
                   <Download size={20} />
                 </ActionIcon>

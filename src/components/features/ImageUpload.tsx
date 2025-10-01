@@ -7,6 +7,35 @@ import { getPresetById, applyPreset } from '../../presets/compressionPresets';
 import { convertHeicFiles } from '../../utils/heicConverter';
 import { notifications } from '@mantine/notifications';
 
+// Static styles extracted outside component to prevent re-creation on every render
+const DROPZONE_STYLES = {
+  borderRadius: '16px',
+  borderWidth: '3px',
+};
+
+const UPLOAD_ICON_STYLES = (isDragging: boolean) => ({
+  color: isDragging ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
+  transform: isDragging ? 'scale(1.1)' : 'scale(1)',
+});
+
+const COMPACT_DROPZONE_STYLES = {
+  borderRadius: '12px',
+};
+
+const FILE_IMAGE_STYLES = (isDragging: boolean) => ({
+  color: isDragging ? 'var(--color-primary)' : 'var(--color-text-muted)',
+  transform: isDragging ? 'scale(1.1)' : 'scale(1)',
+});
+
+const ADD_FILES_BTN_STYLES = {
+  borderRadius: '8px',
+};
+
+const PASTE_BTN_STYLES = {
+  borderWidth: '1px',
+  borderRadius: '8px',
+};
+
 interface ImageUploadProps {
   onFilesSelected: (files: File[]) => void;
   minimal?: boolean;
@@ -263,10 +292,9 @@ export function ImageUpload({
               isDragging ? 'animate-pulse-glow' : ''
             }`}
             style={{
+              ...DROPZONE_STYLES,
               borderColor: isDragging ? 'var(--color-dropzone-active-border)' : 'var(--color-dropzone-border)',
               backgroundColor: isDragging ? 'var(--color-dropzone-active-bg)' : 'var(--color-dropzone-bg)',
-              borderRadius: '16px',
-              borderWidth: '3px',
             }}
             onDragOver={(e) => {
               e.preventDefault();
@@ -286,10 +314,7 @@ export function ImageUpload({
 
             <Upload
               className="w-14 h-14 mx-auto mb-4 transition-transform duration-300"
-              style={{
-                color: isDragging ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
-                transform: isDragging ? 'scale(1.1)' : 'scale(1)'
-              }}
+              style={UPLOAD_ICON_STYLES(isDragging)}
             />
             <p
               className="text-center mb-2 font-semibold text-xl"
@@ -360,9 +385,9 @@ export function ImageUpload({
       <div
         className="border-2 border-dashed p-8 text-center transition-all duration-300 flex-1 flex flex-col items-center justify-center"
         style={{
+          ...COMPACT_DROPZONE_STYLES,
           borderColor: isDragging ? 'var(--color-dropzone-active-border)' : 'var(--color-dropzone-border)',
           backgroundColor: isDragging ? 'var(--color-dropzone-active-bg)' : 'var(--color-dropzone-bg)',
-          borderRadius: '12px',
         }}
         onDragOver={(e) => {
           e.preventDefault();
@@ -373,10 +398,7 @@ export function ImageUpload({
       >
         <FileImage
           className="w-10 h-10 mx-auto mb-3 transition-transform duration-300"
-          style={{
-            color: isDragging ? 'var(--color-primary)' : 'var(--color-text-muted)',
-            transform: isDragging ? 'scale(1.1)' : 'scale(1)'
-          }}
+          style={FILE_IMAGE_STYLES(isDragging)}
         />
         <p className="mb-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>
           Drop more images here
@@ -394,18 +416,8 @@ export function ImageUpload({
         <div className="flex gap-2 justify-center mt-4">
           <label
             htmlFor="file-input-compact"
-            className="inline-flex items-center px-5 py-2.5 text-white text-sm font-semibold rounded-lg transition-all duration-200 cursor-pointer elevation-sm hover:elevation-md"
-            style={{
-              backgroundColor: 'var(--color-primary)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
+            className="inline-flex items-center px-5 py-2.5 text-white text-sm font-semibold transition-all duration-200 cursor-pointer elevation-sm hover:elevation-md btn-primary-hover"
+            style={ADD_FILES_BTN_STYLES}
           >
             Add Files
           </label>
@@ -413,20 +425,12 @@ export function ImageUpload({
           {clipboardSupported && (
             <button
               onClick={handlePasteFromClipboard}
-              className="inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 elevation-sm hover:elevation-md"
+              className="inline-flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 elevation-sm hover:elevation-md btn-elevated-hover"
               style={{
+                ...PASTE_BTN_STYLES,
                 backgroundColor: 'var(--color-bg-elevated)',
-                borderWidth: '1px',
                 borderColor: 'var(--color-border-primary)',
                 color: 'var(--color-text-primary)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-hover-bg)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-bg-elevated)';
-                e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
               <Clipboard className="w-4 h-4" />

@@ -8,6 +8,49 @@ import { ImageComparison } from '../comparison/ImageComparison';
 import { ImageSettingsModal } from './ImageSettingsModal';
 import { CropModal } from './CropModal';
 
+// Static styles extracted outside component to prevent re-creation on every render
+const CARD_STYLES = {
+  borderWidth: '1px',
+  borderColor: 'var(--color-border-glass)',
+};
+
+const IMAGE_CONTAINER_STYLES = {
+  position: 'relative' as const,
+  backgroundColor: 'var(--color-bg-secondary)',
+  height: 300,
+  overflow: 'hidden' as const,
+};
+
+const PROCESSING_CONTAINER_STYLES = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  height: '100%',
+  backgroundColor: 'var(--color-bg-tertiary)',
+};
+
+const LOADER_STYLES = { color: 'var(--color-primary)' };
+const TEXT_SECONDARY_STYLES = { color: 'var(--color-text-secondary)' };
+
+const DRAG_HANDLE_STYLES = {
+  position: 'absolute' as const,
+  top: 12,
+  right: 60,
+  borderRadius: '10px',
+};
+
+const REMOVE_BTN_STYLES = {
+  position: 'absolute' as const,
+  top: 12,
+  right: 12,
+  borderRadius: '10px',
+};
+
+const ACTION_BTN_STYLES = {
+  borderRadius: '10px',
+  height: '44px',
+};
+
 interface ImageCardProps {
   image: ProcessedImage;
   onRemove: () => void;
@@ -212,10 +255,7 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
         padding="0"
         radius="lg"
         className="glass elevation-xl transition-smooth animate-scale-in overflow-hidden"
-        style={{
-          borderWidth: '1px',
-          borderColor: 'var(--color-border-glass)',
-        }}
+        style={CARD_STYLES}
         data-tour="image-card"
       >
       {/* Colored Top Accent Bar - Status Indicator */}
@@ -232,28 +272,12 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
       )}
 
       <Card.Section>
-        <div
-          style={{
-            position: 'relative',
-            backgroundColor: 'var(--color-bg-secondary)',
-            height: 300,
-            overflow: 'hidden',
-          }}
-        >
+        <div style={IMAGE_CONTAINER_STYLES}>
           {image.processing ? (
-            <div
-              className="shimmer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100%',
-                backgroundColor: 'var(--color-bg-tertiary)',
-              }}
-            >
+            <div className="shimmer" style={PROCESSING_CONTAINER_STYLES}>
               <Stack align="center" gap="md">
-                <Loader size={40} style={{ color: 'var(--color-primary)' }} />
-                <Text size="sm" fw={500} style={{ color: 'var(--color-text-secondary)' }}>
+                <Loader size={40} style={LOADER_STYLES} />
+                <Text size="sm" fw={500} style={TEXT_SECONDARY_STYLES}>
                   Processing...
                 </Text>
               </Stack>
@@ -305,24 +329,8 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
               {...dragHandleProps}
               variant="filled"
               size="lg"
-              className="elevation-md transition-smooth"
-              style={{
-                position: 'absolute',
-                top: 12,
-                right: 60,
-                backgroundColor: 'rgba(0, 0, 0, 0.6)',
-                backdropFilter: 'blur(8px)',
-                borderRadius: '10px',
-                cursor: 'grab',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(100, 100, 100, 0.8)';
-                e.currentTarget.style.transform = 'scale(1.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
+              className="elevation-md drag-handle"
+              style={{ ...DRAG_HANDLE_STYLES, cursor: 'grab' }}
             >
               <GripVertical size={18} style={{ color: 'white' }} />
             </ActionIcon>
@@ -332,24 +340,9 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
           <ActionIcon
             variant="filled"
             size="lg"
-            className="elevation-md transition-smooth"
-            style={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              backdropFilter: 'blur(8px)',
-              borderRadius: '10px',
-            }}
+            className="elevation-md remove-btn-hover"
+            style={REMOVE_BTN_STYLES}
             onClick={onRemove}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.9)';
-              e.currentTarget.style.transform = 'scale(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
           >
             <X size={18} style={{ color: 'white' }} />
           </ActionIcon>
@@ -575,20 +568,8 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
                       variant="subtle"
                       size="xl"
                       onClick={() => setShowCrop(true)}
-                      className="elevation-sm transition-smooth"
-                      style={{
-                        backgroundColor: 'var(--color-bg-elevated)',
-                        borderRadius: '10px',
-                        height: '44px',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--color-hover-bg)';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'var(--color-bg-elevated)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }}
+                      className="elevation-sm btn-elevated-hover"
+                      style={ACTION_BTN_STYLES}
                     >
                       <Crop size={20} />
                     </ActionIcon>
@@ -600,20 +581,8 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
                     size="xl"
                     onClick={() => setShowSettings(true)}
                     data-tour="image-settings-button"
-                    className="elevation-sm transition-smooth"
-                    style={{
-                      backgroundColor: 'var(--color-bg-elevated)',
-                      borderRadius: '10px',
-                      height: '44px',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--color-hover-bg)';
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'var(--color-bg-elevated)';
-                      e.currentTarget.style.transform = 'translateY(0)';
-                    }}
+                    className="elevation-sm btn-elevated-hover"
+                    style={ACTION_BTN_STYLES}
                   >
                     <Settings2 size={20} />
                   </ActionIcon>
@@ -624,24 +593,11 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
                     size="xl"
                     onClick={() => setShowComparison(!showComparison)}
                     data-tour="image-compare-button"
-                    className="elevation-sm transition-smooth"
+                    className={showComparison ? "elevation-sm" : "elevation-sm btn-elevated-hover"}
                     style={{
+                      ...ACTION_BTN_STYLES,
                       backgroundColor: showComparison ? 'var(--color-primary-light)' : 'var(--color-bg-elevated)',
-                      borderRadius: '10px',
-                      height: '44px',
                       color: showComparison ? 'var(--color-primary)' : 'inherit',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!showComparison) {
-                        e.currentTarget.style.backgroundColor = 'var(--color-hover-bg)';
-                      }
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!showComparison) {
-                        e.currentTarget.style.backgroundColor = 'var(--color-bg-elevated)';
-                      }
-                      e.currentTarget.style.transform = 'translateY(0)';
                     }}
                   >
                     <Eye size={20} />

@@ -37,16 +37,13 @@ export function ResultsHeader({ onReset, viewMode = 'grid', onViewModeChange }: 
             onClick={onReset}
             aria-label="Return to home and start over"
             data-tour="welcome"
+            className="hover-lift logo-hover"
             style={{
               border: 'none',
               background: 'none',
               padding: 0,
               cursor: 'pointer',
-              transition: 'transform 0.2s ease',
             }}
-            className="hover-lift"
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
             <img
               src={isDark ? '/logo-darkmode.svg' : '/logo.svg'}

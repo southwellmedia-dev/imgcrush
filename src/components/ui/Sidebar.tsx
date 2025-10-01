@@ -69,7 +69,7 @@ export function Sidebar({ onReset, hasImages, onCollapsedChange, onOpenSettings,
     >
       <UnstyledButton
         onClick={disabled ? undefined : onClick}
-        className="transition-smooth"
+        className={`nav-item-hover ${active ? 'active' : ''}`}
         disabled={disabled}
         style={{
           display: 'flex',
@@ -83,12 +83,6 @@ export function Sidebar({ onReset, hasImages, onCollapsedChange, onOpenSettings,
           justifyContent: collapsed ? 'center' : 'flex-start',
           opacity: disabled ? 0.5 : 1,
           cursor: disabled ? 'not-allowed' : 'pointer',
-        }}
-        onMouseEnter={(e) => {
-          if (!active && !disabled) e.currentTarget.style.backgroundColor = 'var(--color-hover-bg)';
-        }}
-        onMouseLeave={(e) => {
-          if (!active && !disabled) e.currentTarget.style.backgroundColor = 'transparent';
         }}
       >
         <Icon size={20} />
@@ -328,20 +322,11 @@ export function Sidebar({ onReset, hasImages, onCollapsedChange, onOpenSettings,
               leftSection={<Download size={14} />}
               rightSection={<Package size={12} />}
               onClick={onDownloadZip}
-              className="transition-smooth"
+              className="btn-primary-hover"
               style={{
-                backgroundColor: 'var(--color-primary)',
                 borderRadius: '8px',
                 fontWeight: 600,
                 height: '32px',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
               Download ZIP
@@ -367,7 +352,7 @@ export function Sidebar({ onReset, hasImages, onCollapsedChange, onOpenSettings,
             href="https://github.com/southwellmedia-dev/imgcrush"
             target="_blank"
             rel="noopener noreferrer"
-            className="transition-smooth"
+            className="github-link-hover"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -380,8 +365,6 @@ export function Sidebar({ onReset, hasImages, onCollapsedChange, onOpenSettings,
               justifyContent: collapsed ? 'center' : 'flex-start',
               textDecoration: 'none',
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-hover-bg)'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <Github size={20} />
             <AnimatePresence mode="wait">

@@ -3,6 +3,29 @@ import { Group, Text, Button, Badge } from '@mantine/core';
 import { Edit2, Sparkles } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 
+// Static styles extracted outside component to prevent re-creation on every render
+const CALLOUT_STYLES = {
+  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%)',
+  border: '1px solid rgba(16, 185, 129, 0.3)',
+  borderRadius: '12px',
+  padding: '16px 20px',
+};
+
+const ICON_CONTAINER_STYLES = {
+  width: '40px',
+  height: '40px',
+  borderRadius: '10px',
+  backgroundColor: 'var(--color-success)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+
+const BUTTON_STYLES = {
+  borderRadius: '8px',
+  fontWeight: 600,
+};
+
 interface BulkRenameCalloutProps {
   imageCount: number;
   onOpenRename: () => void;
@@ -28,26 +51,11 @@ export function BulkRenameCallout({ imageCount, onOpenRename }: BulkRenameCallou
       initial={shouldAnimate ? { opacity: 0, y: -10 } : { opacity: 1, y: 0 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: shouldAnimate ? 0.3 : 0, delay: shouldAnimate ? 0.1 : 0 }}
-      style={{
-        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%)',
-        border: '1px solid rgba(16, 185, 129, 0.3)',
-        borderRadius: '12px',
-        padding: '16px 20px',
-      }}
+      style={CALLOUT_STYLES}
     >
       <Group justify="space-between" align="center">
         <Group gap="md">
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              backgroundColor: 'var(--color-success)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
+          <div style={ICON_CONTAINER_STYLES}>
             <Edit2 size={20} color="white" />
           </div>
           <div>
@@ -70,20 +78,8 @@ export function BulkRenameCallout({ imageCount, onOpenRename }: BulkRenameCallou
           size="sm"
           leftSection={<Edit2 size={16} />}
           onClick={onOpenRename}
-          className="transition-smooth"
-          style={{
-            backgroundColor: 'var(--color-success)',
-            borderRadius: '8px',
-            fontWeight: 600,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#0ea574';
-            e.currentTarget.style.transform = 'translateY(-1px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'var(--color-success)';
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
+          className="btn-success-hover"
+          style={BUTTON_STYLES}
         >
           Bulk Rename
         </Button>
