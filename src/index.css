@@ -386,3 +386,73 @@ input[type="range"]:focus::-moz-range-thumb {
   -webkit-backdrop-filter: blur(3px);
   z-index: -1;
 }
+
+/* Notification Toast Styling - High Specificity Override */
+/* Success notifications - Green background */
+.mantine-Notification-root[data-color="green"] {
+  background-color: #10b981 !important;
+  border: none !important;
+  color: white !important;
+}
+
+.mantine-Notification-root[data-color="green"] .mantine-Notification-title,
+.mantine-Notification-root[data-color="green"] .mantine-Notification-description,
+.mantine-Notification-root[data-color="green"] .mantine-Notification-body {
+  color: white !important;
+}
+
+/* Error notifications - Red background */
+.mantine-Notification-root[data-color="red"] {
+  background-color: #ef4444 !important;
+  border: none !important;
+  color: white !important;
+}
+
+.mantine-Notification-root[data-color="red"] .mantine-Notification-title,
+.mantine-Notification-root[data-color="red"] .mantine-Notification-description,
+.mantine-Notification-root[data-color="red"] .mantine-Notification-body {
+  color: white !important;
+}
+
+/* Warning notifications - Yellow/Amber background */
+.mantine-Notification-root[data-color="yellow"] {
+  background-color: #f59e0b !important;
+  border: none !important;
+  color: white !important;
+}
+
+.mantine-Notification-root[data-color="yellow"] .mantine-Notification-title,
+.mantine-Notification-root[data-color="yellow"] .mantine-Notification-description,
+.mantine-Notification-root[data-color="yellow"] .mantine-Notification-body {
+  color: white !important;
+}
+
+/* Info notifications - Blue background */
+.mantine-Notification-root[data-color="blue"] {
+  background-color: #3b82f6 !important;
+  border: none !important;
+  color: white !important;
+}
+
+.mantine-Notification-root[data-color="blue"] .mantine-Notification-title,
+.mantine-Notification-root[data-color="blue"] .mantine-Notification-description,
+.mantine-Notification-root[data-color="blue"] .mantine-Notification-body {
+  color: white !important;
+}
+
+/* Close button styling for colored notifications */
+.mantine-Notification-root[data-color="green"] .mantine-Notification-closeButton,
+.mantine-Notification-root[data-color="red"] .mantine-Notification-closeButton,
+.mantine-Notification-root[data-color="yellow"] .mantine-Notification-closeButton,
+.mantine-Notification-root[data-color="blue"] .mantine-Notification-closeButton {
+  color: white !important;
+  opacity: 0.8;
+}
+
+.mantine-Notification-root[data-color="green"] .mantine-Notification-closeButton:hover,
+.mantine-Notification-root[data-color="red"] .mantine-Notification-closeButton:hover,
+.mantine-Notification-root[data-color="yellow"] .mantine-Notification-closeButton:hover,
+.mantine-Notification-root[data-color="blue"] .mantine-Notification-closeButton:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
