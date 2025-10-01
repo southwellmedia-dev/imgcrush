@@ -61,6 +61,10 @@ function SortableImageCard(props: SortableImageCardProps) {
       {/* Drag Handle - positioned next to delete button */}
       <div
         {...listeners}
+        role="button"
+        tabIndex={0}
+        aria-label="Drag to reorder image"
+        aria-roledescription="draggable"
         style={{
           position: "absolute",
           top: "8px",
@@ -81,8 +85,14 @@ function SortableImageCard(props: SortableImageCardProps) {
         onMouseLeave={(e) => {
           e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            // The keyboard sensor from @dnd-kit handles arrow key navigation
+          }
+        }}
       >
-        <GripVertical size={16} color="white" />
+        <GripVertical size={16} color="white" aria-hidden="true" />
       </div>
 
       <ImageCard {...props} />
@@ -171,6 +181,7 @@ export function ImageProcessor({
             processedSize: processedBlob.size,
             processing: false,
             processed: true,
+            outputFormat: imageSettings.format,
           });
         } catch (error) {
           console.error("Error processing image:", error);

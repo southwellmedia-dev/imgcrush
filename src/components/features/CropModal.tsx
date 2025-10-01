@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Modal, Button, Group, Stack, Text, SegmentedControl } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import Cropper from 'react-easy-crop';
 import { Crop, X } from 'lucide-react';
 import { Area, Point } from 'react-easy-crop/types';
@@ -9,10 +10,11 @@ interface CropModalProps {
   onClose: () => void;
   imageUrl: string;
   imageName: string;
+  imageFormat?: 'jpeg' | 'png' | 'webp' | 'avif';
   onCropComplete: (croppedImage: Blob, croppedFileName: string) => void;
 }
 
-export function CropModal({ opened, onClose, imageUrl, imageName, onCropComplete }: CropModalProps) {
+export function CropModal({ opened, onClose, imageUrl, imageName, imageFormat, onCropComplete }: CropModalProps) {
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [aspect, setAspect] = useState<number | undefined>(16 / 9);
@@ -66,6 +68,20 @@ export function CropModal({ opened, onClose, imageUrl, imageName, onCropComplete
           croppedAreaPixels.height
         );
 
+        // Determine MIME type based on format, preserving transparency for PNG/WebP
+        const getMimeType = (format: string | undefined): string => {
+          switch (format) {
+            case 'png': return 'image/png';
+            case 'webp': return 'image/webp';
+            case 'avif': return 'image/avif';
+            case 'jpeg':
+            default: return 'image/jpeg';
+          }
+        };
+
+        const mimeType = getMimeType(imageFormat);
+        const quality = mimeType === 'image/png' ? undefined : 0.95;
+
         canvas.toBlob(
           (blob) => {
             if (blob) {
@@ -74,8 +90,8 @@ export function CropModal({ opened, onClose, imageUrl, imageName, onCropComplete
               reject(new Error('Failed to create blob'));
             }
           },
-          'image/jpeg',
-          0.95
+          mimeType,
+          quality
         );
       };
 
@@ -89,12 +105,30 @@ export function CropModal({ opened, onClose, imageUrl, imageName, onCropComplete
     setIsProcessing(true);
     try {
       const croppedBlob = await createCroppedImage();
-      const croppedFileName = imageName.replace(/\.[^/.]+$/, '') + '_cropped.jpg';
+
+      // Get correct extension based on format
+      const getExtension = (format: string | undefined): string => {
+        switch (format) {
+          case 'png': return '.png';
+          case 'webp': return '.webp';
+          case 'avif': return '.avif';
+          case 'jpeg':
+          default: return '.jpg';
+        }
+      };
+
+      const extension = getExtension(imageFormat);
+      const baseName = imageName.replace(/\.[^/.]+$/, '') || 'image';
+      const croppedFileName = `${baseName}_cropped${extension}`;
       onCropComplete(croppedBlob, croppedFileName);
       onClose();
     } catch (error) {
       console.error('Crop error:', error);
-      alert('Failed to crop image');
+      notifications.show({
+        title: 'Crop Failed',
+        message: 'Could not crop the image. Please try again.',
+        color: 'red',
+      });
     } finally {
       setIsProcessing(false);
     }

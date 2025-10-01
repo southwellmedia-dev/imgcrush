@@ -203,26 +203,57 @@ function App() {
   }, [handleFilesSelected]);
 
   const handleSaveShortcut = useCallback(() => {
-    const firstProcessedImage = processedImages.find(img => img.processed && img.processedBlob);
+    if (processedImages.length > 1) {
+      notifications.show({
+        title: 'Multiple Images Found',
+        message: 'Use the "Download All as ZIP" button to save multiple images.',
+        color: 'blue',
+      });
+      return;
+    }
 
-    if (firstProcessedImage && firstProcessedImage.processedBlob) {
-      const url = URL.createObjectURL(firstProcessedImage.processedBlob);
+    const imageToSave = processedImages.find(img => img.processed && img.processedBlob);
+
+    if (imageToSave && imageToSave.processedBlob) {
+      const url = URL.createObjectURL(imageToSave.processedBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `compressed_${firstProcessedImage.originalFile.name}`;
+
+      // Get correct extension based on output format
+      const getExtension = (format: string | undefined): string => {
+        switch (format) {
+          case 'jpeg': return '.jpg';
+          case 'png': return '.png';
+          case 'webp': return '.webp';
+          case 'avif': return '.avif';
+          default: {
+            // Fallback to original extension
+            const originalName = imageToSave.originalFile.name;
+            const lastDotIndex = originalName.lastIndexOf('.');
+            return lastDotIndex > 0 ? originalName.substring(lastDotIndex) : '.jpg';
+          }
+        }
+      };
+
+      const extension = getExtension(imageToSave.outputFormat);
+      const baseName = imageToSave.originalFile.name.replace(/\.[^/.]+$/, '') || 'image';
+      link.download = imageToSave.customFileName
+        ? `${imageToSave.customFileName}${extension}`
+        : `compressed_${baseName}${extension}`;
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
       notifications.show({
-        title: 'Download started',
-        message: `Downloading ${firstProcessedImage.originalFile.name}`,
+        title: 'Download Started',
+        message: `Downloading ${link.download}`,
         color: 'green',
       });
     } else {
       notifications.show({
-        title: 'No images ready',
+        title: 'No Images Ready',
         message: 'Please wait for images to finish processing, or upload some images first.',
         color: 'yellow',
       });

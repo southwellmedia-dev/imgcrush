@@ -154,16 +154,8 @@ export async function hasExifData(blob: Blob): Promise<boolean> {
       }
 
       return false;
-    }        if (offset + 2 + segmentLength > view.byteLength) {
-          console.warn('JPEG segment length extends past buffer');
-          return false;
-        }
-
-        offset += 2 + segmentLength;
-      }
-
-      return false;
     }
+
     if (isPng) {
       // PNG: scan chunks for eXIf (chunk type ASCII 'eXIf')
       let offset = 8; // skip signature

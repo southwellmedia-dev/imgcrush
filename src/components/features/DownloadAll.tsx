@@ -24,14 +24,28 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
 
     images.forEach((image) => {
       if (image.processedBlob) {
-        // Use custom filename if set, otherwise use original with 'compressed_' prefix
-        const originalName = image.originalFile.name;
-        const lastDotIndex = originalName.lastIndexOf(".");
-        const extension =
-          lastDotIndex > 0 ? originalName.substring(lastDotIndex) : "";
+        // Get the correct extension based on output format
+        const getExtension = (format: string | undefined): string => {
+          switch (format) {
+            case 'jpeg': return '.jpg';
+            case 'png': return '.png';
+            case 'webp': return '.webp';
+            case 'avif': return '.avif';
+            default: {
+              // Fallback to original extension
+              const originalName = image.originalFile.name;
+              const lastDotIndex = originalName.lastIndexOf(".");
+              return lastDotIndex > 0 ? originalName.substring(lastDotIndex) : ".jpg";
+            }
+          }
+        };
+
+        const extension = getExtension(image.outputFormat);
+        const baseName = image.customFileName ||
+          image.originalFile.name.replace(/\.[^/.]+$/, '') || 'image';
         const filename = image.customFileName
           ? `${image.customFileName}${extension}`
-          : `compressed_${originalName}`;
+          : `compressed_${baseName}${extension}`;
         zip.file(filename, image.processedBlob);
       }
     });
