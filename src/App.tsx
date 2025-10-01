@@ -13,7 +13,8 @@ import { ProcessedImage, ProcessingSettings } from "./types";
 import { applyPreset } from "./presets/compressionPresets";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { notifications } from "@mantine/notifications";
-import JSZip from "jszip";
+// Lazy-load JSZip to reduce initial bundle size
+const loadJSZip = () => import('jszip');
 import {
   loadSelectedPreset,
   loadProcessingSettings,
@@ -168,10 +169,55 @@ function App() {
     }
 
     try {
+      // Lazy-load JSZip
+      const JSZipModule = await loadJSZip();
+      const JSZip = JSZipModule.default;
       const zip = new JSZip();
       const usedFilenames = new Set<string>();
 
-      // Helper function to generate unique filename
+      // Helper function to get correct file extension based on output format
+      const getExtension = (outputFormat: string | undefined, originalName: string): string => {
+        if (outputFormat) {
+          // Map output format to extension
+          const formatMap: Record<string, string> = {
+            'jpeg': '.jpg',
+            'jpg': '.jpg',
+            'png': '.png',
+            'webp': '.webp',
+            'avif': '.avif',
+          };
+          return formatMap[outputFormat.toLowerCase()] || `.${outputFormat}`;
+        }
+
+        // Fallback to original extension
+        const lastDot = originalName.lastIndexOf('.');
+        return lastDot > 0 ? originalName.substring(lastDot) : '';
+      };
+
+      // Helper function to sanitize filename - removes path components and invalid characters
+      const sanitizeFilename = (filename: string): string => {
+        // Remove or replace path separators and traversal attempts
+        let sanitized = filename
+          .replace(/[\/\\]/g, '_')           // Replace path separators with underscore
+          .replace(/\.\./g, '_')             // Replace .. with underscore
+          .trim();                           // Remove leading/trailing whitespace
+
+        // Remove leading dots
+        sanitized = sanitized.replace(/^\.+/, '');
+
+        // Remove invalid filename characters (OS-specific but being conservative)
+        // Keep: alphanumeric, spaces, hyphens, underscores, parentheses, periods
+        sanitized = sanitized.replace(/[<>:"|?*\x00-\x1F]/g, '_');
+
+        // Collapse multiple underscores/spaces
+        sanitized = sanitized.replace(/_{2,}/g, '_').replace(/\s{2,}/g, ' ');
+
+        // Final trim and fallback to safe default if empty
+        sanitized = sanitized.trim();
+        return sanitized || 'image';
+      };
+
+      // Helper function to generate unique filename (prevents silent overwrites)
       const getUniqueFilename = (baseName: string, extension: string): string => {
         let filename = `${baseName}${extension}`;
         let counter = 1;
@@ -189,12 +235,20 @@ function App() {
       processedImagesOnly.forEach((image) => {
         if (image.processedBlob) {
           const originalName = image.originalFile.name;
+
+          // Extract base name from original (without extension)
           const lastDot = originalName.lastIndexOf('.');
           const baseName = lastDot > 0 ? originalName.substring(0, lastDot) : originalName;
-          const extension = lastDot > 0 ? originalName.substring(lastDot) : '';
 
-          const baseFileName = image.customFileName || `compressed_${baseName}`;
-          const uniqueFilename = getUniqueFilename(baseFileName, extension);
+          // Get correct extension based on output format (not original extension!)
+          const extension = getExtension(image.outputFormat, originalName);
+
+          // Sanitize the base filename (custom or compressed original)
+          const rawBaseFileName = image.customFileName || `compressed_${baseName}`;
+          const sanitizedBaseFileName = sanitizeFilename(rawBaseFileName);
+
+          // Generate unique filename to prevent overwrites
+          const uniqueFilename = getUniqueFilename(sanitizedBaseFileName, extension);
 
           zip.file(uniqueFilename, image.processedBlob);
         }
@@ -422,7 +476,7 @@ function App() {
 
       {/* Main Content Area - Responsive to sidebar state */}
       <main style={{
-        marginLeft: sidebarCollapsed ? '80px' : '240px',
+        marginLeft: sidebarCollapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)',
         flex: 1,
         display: 'flex',
         flexDirection: 'column',

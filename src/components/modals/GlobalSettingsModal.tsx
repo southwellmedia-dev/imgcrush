@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button, Stack } from '@mantine/core';
 import { ProcessingControls } from '../features/ProcessingControls';
 import { ProcessingSettings } from '../../types';
@@ -23,6 +23,13 @@ export function GlobalSettingsModal({
   onRegenerateAll,
 }: GlobalSettingsModalProps) {
   const [localSettings, setLocalSettings] = useState(settings);
+
+  // Sync local state when modal opens or when settings prop changes
+  useEffect(() => {
+    if (opened) {
+      setLocalSettings(settings);
+    }
+  }, [opened, settings]);
 
   const handleSave = () => {
     onSettingsChange(localSettings);

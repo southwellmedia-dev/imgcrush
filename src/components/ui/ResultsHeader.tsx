@@ -32,20 +32,36 @@ export function ResultsHeader({ onReset, viewMode = 'grid', onViewModeChange }: 
     >
       <Group justify="space-between" align="center" px="lg">
         {/* Logo */}
-        <img
-          src={isDark ? '/logo-darkmode.svg' : '/logo.svg'}
-          alt="ImgCrush"
-          style={{
-            height: '42px',
-            cursor: onReset ? 'pointer' : 'default',
-            transition: 'transform 0.2s ease'
-          }}
-          className="hover-lift"
-          onClick={onReset}
-          data-tour="welcome"
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-        />
+        {onReset ? (
+          <button
+            onClick={onReset}
+            aria-label="Return to home and start over"
+            data-tour="welcome"
+            style={{
+              border: 'none',
+              background: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease',
+            }}
+            className="hover-lift"
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <img
+              src={isDark ? '/logo-darkmode.svg' : '/logo.svg'}
+              alt="ImgCrush"
+              style={{ height: '42px', display: 'block' }}
+            />
+          </button>
+        ) : (
+          <img
+            src={isDark ? '/logo-darkmode.svg' : '/logo.svg'}
+            alt="ImgCrush"
+            style={{ height: '42px' }}
+            data-tour="welcome"
+          />
+        )}
 
         {/* Actions */}
         <Group gap="sm">

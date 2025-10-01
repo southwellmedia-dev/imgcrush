@@ -55,16 +55,7 @@ export function BulkRenameCallout({ imageCount, onOpenRename }: BulkRenameCallou
               <Text size="sm" fw={600} style={{ color: 'var(--color-text-primary)' }}>
                 Organize Your Files
               </Text>
-              <Badge
-                size="sm"
-                leftSection={<Sparkles size={12} />}
-                style={{
-                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                  color: 'var(--color-success)',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
-                  fontWeight: 600,
-                }}
-              >
+              <Badge size="sm" leftSection={<Sparkles size={12} />} className="badge-success-subtle">
                 Pro Tip
               </Badge>
             </Group>

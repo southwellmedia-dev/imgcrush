@@ -16,7 +16,6 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { motion } from "framer-motion";
 import { GripVertical } from "lucide-react";
 import { ImageCard } from "./ImageCard";
 import { ImageTableView } from "./ImageTableView";

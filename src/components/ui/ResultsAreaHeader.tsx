@@ -125,11 +125,8 @@ export function ResultsAreaHeader({
                 <Badge
                   size="sm"
                   variant="light"
+                  className="badge-gray-light"
                   style={{
-                    backgroundColor: 'rgba(100, 116, 139, 0.1)',
-                    color: 'var(--color-text-tertiary)',
-                    border: '1px solid rgba(100, 116, 139, 0.15)',
-                    fontWeight: 600,
                     marginBottom: '4px',
                     cursor: 'help',
                   }}
@@ -150,14 +147,7 @@ export function ResultsAreaHeader({
                 / <AnimatedNumber value={stats.totalImages} />
               </Text>
               {isProcessing && (
-                <Badge
-                  size="sm"
-                  style={{
-                    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                    color: 'var(--color-info)',
-                    border: '1px solid rgba(59, 130, 246, 0.3)',
-                  }}
-                >
+                <Badge size="sm" className="badge-info-subtle">
                   Processing...
                 </Badge>
               )}
@@ -184,12 +174,7 @@ export function ResultsAreaHeader({
                   </Text>
                   <Badge
                     size="sm"
-                    style={{
-                      backgroundColor: stats.compressionRatio < 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                      color: stats.compressionRatio < 0 ? 'var(--color-error)' : 'var(--color-success)',
-                      border: stats.compressionRatio < 0 ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(16, 185, 129, 0.3)',
-                      fontWeight: 600,
-                    }}
+                    className={stats.compressionRatio < 0 ? 'badge-error-subtle' : 'badge-success-subtle'}
                   >
                     {stats.compressionRatio < 0 ? '+' : '-'}<AnimatedPercentage value={stats.compressionRatio} />%
                   </Badge>

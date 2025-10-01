@@ -46,6 +46,10 @@ export function AddImagesModal({
       <ImageUpload
         onFilesSelected={handleFilesSelected}
         minimal={false}
+        selectedPreset={selectedPreset}
+        onPresetChange={onPresetChange}
+        settings={settings}
+        onSettingsChange={onSettingsChange}
       />
     </Modal>
   );

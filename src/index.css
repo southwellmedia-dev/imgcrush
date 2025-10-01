@@ -80,6 +80,10 @@
   /* Blur Effects */
   --blur-glass: blur(12px);
   --blur-backdrop: blur(8px);
+
+  /* Layout - Sidebar Widths */
+  --sidebar-width: 240px;
+  --sidebar-width-collapsed: 80px;
 }
 
 /* Dark mode - "Studio Bold" Enhanced */
@@ -576,6 +580,49 @@ input[type="range"]:focus::-moz-range-thumb {
 
 .elevation-2xl {
   box-shadow: var(--shadow-2xl);
+}
+
+/* Badge Utilities */
+.badge-primary-subtle {
+  background-color: rgba(220, 38, 38, 0.15);
+  color: var(--color-primary);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  font-weight: 600;
+}
+
+.badge-gray-subtle {
+  background-color: rgba(100, 116, 139, 0.08);
+  color: var(--color-text-secondary);
+  border: 1px solid rgba(100, 116, 139, 0.15);
+  font-weight: 500;
+}
+
+.badge-gray-light {
+  background-color: rgba(100, 116, 139, 0.1);
+  color: var(--color-text-tertiary);
+  border: 1px solid rgba(100, 116, 139, 0.15);
+  font-weight: 600;
+}
+
+.badge-success-subtle {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: var(--color-success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  font-weight: 600;
+}
+
+.badge-error-subtle {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--color-error);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  font-weight: 600;
+}
+
+.badge-info-subtle {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: var(--color-info);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  font-weight: 600;
 }
 
 /* Glow Effects */

@@ -25,8 +25,9 @@ export function Sidebar({ onReset, hasImages, onCollapsedChange, onOpenSettings,
   // Calculate export stats
   const stats = useMemo(() => {
     const processedImages = images.filter(img => img.processed);
-    const totalOriginal = images.reduce((sum, img) => sum + img.originalSize, 0);
-    const totalProcessed = images.reduce((sum, img) => sum + img.processedSize, 0);
+    // Only calculate totals from processed images to exclude unprocessed items
+    const totalOriginal = processedImages.reduce((sum, img) => sum + img.originalSize, 0);
+    const totalProcessed = processedImages.reduce((sum, img) => sum + img.processedSize, 0);
     const totalSaved = totalOriginal - totalProcessed;
     const compressionRatio = totalOriginal > 0 ? ((totalSaved / totalOriginal) * 100) : 0;
 
@@ -113,9 +114,9 @@ export function Sidebar({ onReset, hasImages, onCollapsedChange, onOpenSettings,
   return (
     <motion.aside
       className="glass-strong elevation-lg"
-      initial={{ width: 240 }}
+      initial={{ width: 'var(--sidebar-width)' }}
       animate={{
-        width: collapsed ? 80 : 240,
+        width: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)',
       }}
       transition={{
         duration: hasInteracted ? 0.3 : 0,

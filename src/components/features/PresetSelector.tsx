@@ -46,15 +46,7 @@ export function PresetSelector({ selectedPreset, onPresetChange }: PresetSelecto
                     Selected
                   </Badge>
                 ) : preset.badge ? (
-                  <Badge
-                    size="xs"
-                    style={{
-                      backgroundColor: 'rgba(220, 38, 38, 0.15)',
-                      color: 'var(--color-primary)',
-                      border: '1px solid rgba(220, 38, 38, 0.3)',
-                      fontWeight: 600,
-                    }}
-                  >
+                  <Badge size="xs" className="badge-primary-subtle">
                     {preset.badge}
                   </Badge>
                 ) : null}
@@ -70,17 +62,7 @@ export function PresetSelector({ selectedPreset, onPresetChange }: PresetSelecto
                   <Text size="xs" c="dimmed" mb={6}>Best for:</Text>
                   <Group gap={6}>
                     {preset.recommended.slice(0, 2).map((item, index) => (
-                      <Badge
-                        key={index}
-                        size="sm"
-                        variant="light"
-                        style={{
-                          backgroundColor: 'rgba(100, 116, 139, 0.08)',
-                          color: 'var(--color-text-secondary)',
-                          border: '1px solid rgba(100, 116, 139, 0.15)',
-                          fontWeight: 500,
-                        }}
-                      >
+                      <Badge key={index} size="sm" variant="light" className="badge-gray-subtle">
                         {item}
                       </Badge>
                     ))}
