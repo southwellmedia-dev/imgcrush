@@ -686,7 +686,7 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
             opened={showCrop}
             onClose={() => setShowCrop(false)}
             imageUrl={processedUrl}
-            imageName={image.originalFile.name}
+            imageName={image.customFileName || image.originalFile.name}
             imageFormat={image.outputFormat}
             onCropComplete={handleCropComplete}
           />
