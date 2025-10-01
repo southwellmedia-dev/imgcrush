@@ -36,7 +36,6 @@ export function ResultsHeader({ onReset, viewMode = 'grid', onViewModeChange }: 
           <button
             onClick={onReset}
             aria-label="Return to home and start over"
-            data-tour="welcome"
             className="hover-lift logo-hover"
             style={{
               border: 'none',
@@ -56,7 +55,6 @@ export function ResultsHeader({ onReset, viewMode = 'grid', onViewModeChange }: 
             src={isDark ? '/logo-darkmode.svg' : '/logo.svg'}
             alt="ImgCrush"
             style={{ height: '42px' }}
-            data-tour="welcome"
           />
         )}
 

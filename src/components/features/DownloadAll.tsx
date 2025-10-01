@@ -100,6 +100,7 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
   const totalSaved = totalOriginalSize - totalProcessedSize;
   const compressionRatio =
     totalOriginalSize > 0 ? (totalSaved / totalOriginalSize) * 100 : 0;
+  const isIncrease = compressionRatio < 0;
   const formattedSaved = `${totalSaved >= 0 ? '' : '+'}${formatFileSize(Math.abs(totalSaved))}`;
 
   // Only show batch download for multiple images
@@ -109,7 +110,6 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
     <div
       className="glass-strong elevation-lg"
       style={CONTAINER_STYLES}
-      data-tour="batch-download"
     >
       <Stack gap="lg">
         {/* Header */}
@@ -163,14 +163,20 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
             </Stack>
           </div>
 
-          <div className="elevation-md" style={SPACE_SAVED_BOX_STYLES}>
+          <div
+            className="elevation-md"
+            style={{
+              ...SPACE_SAVED_BOX_STYLES,
+              background: isIncrease ? 'var(--color-error)' : 'var(--color-success)',
+            }}
+          >
             <Stack gap="xs">
               <Text size="xs" fw={600} tt="uppercase" style={{ color: "rgba(255, 255, 255, 0.9)", letterSpacing: "0.5px" }}>
-                Space Saved
+                {isIncrease ? 'Space Added' : 'Space Saved'}
               </Text>
               <Group gap="xs" align="baseline">
                 <Text size="xl" fw={700} style={{ color: "white" }}>
-                  {compressionRatio.toFixed(1)}%
+                  {Math.abs(compressionRatio).toFixed(1)}%
                 </Text>
                 <Text size="sm" fw={600} style={{ color: "rgba(255, 255, 255, 0.9)" }}>
                   ({formattedSaved})
@@ -184,14 +190,14 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
         <Stack gap="xs">
           <Group justify="space-between">
             <Text size="xs" fw={600} style={{ color: 'var(--color-text-tertiary)' }}>
-              Overall Compression
+              Overall {isIncrease ? 'Size Change' : 'Compression'}
             </Text>
-            <Text size="xs" fw={600} style={{ color: "var(--color-success)" }}>
-              {compressionRatio.toFixed(1)}% reduction
+            <Text size="xs" fw={600} style={{ color: isIncrease ? "var(--color-error)" : "var(--color-success)" }}>
+              {Math.abs(compressionRatio).toFixed(1)}% {isIncrease ? 'increase' : 'reduction'}
             </Text>
           </Group>
           <Progress
-            value={compressionRatio}
+            value={Math.abs(compressionRatio)}
             size="lg"
             radius="xl"
             style={{
@@ -199,7 +205,7 @@ export function DownloadAll({ images, onBulkRename }: DownloadAllProps) {
             }}
             styles={{
               section: {
-                background: 'var(--color-success)',
+                background: isIncrease ? 'var(--color-error)' : 'var(--color-success)',
               },
             }}
           />

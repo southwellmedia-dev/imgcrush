@@ -256,7 +256,6 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
         radius="lg"
         className="glass elevation-xl transition-smooth animate-scale-in overflow-hidden"
         style={CARD_STYLES}
-        data-tour="image-card"
       >
       {/* Colored Top Accent Bar - Status Indicator */}
       {image.processed && (
@@ -580,7 +579,6 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
                     variant="subtle"
                     size="xl"
                     onClick={() => setShowSettings(true)}
-                    data-tour="image-settings-button"
                     className="elevation-sm btn-elevated-hover"
                     style={ACTION_BTN_STYLES}
                   >
@@ -592,7 +590,6 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
                     variant="subtle"
                     size="xl"
                     onClick={() => setShowComparison(!showComparison)}
-                    data-tour="image-compare-button"
                     className={showComparison ? "elevation-sm" : "elevation-sm btn-elevated-hover"}
                     style={{
                       ...ACTION_BTN_STYLES,

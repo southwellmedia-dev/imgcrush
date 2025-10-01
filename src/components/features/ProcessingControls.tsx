@@ -74,7 +74,7 @@ export function ProcessingControls({
   if (collapsed) {
     return (
       <Stack gap="md" mb="xl">
-        <Paper p="xl" withBorder radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', borderWidth: '2px', borderColor: 'var(--color-border-primary)' }} data-tour="global-settings">
+        <Paper p="xl" withBorder radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', borderWidth: '2px', borderColor: 'var(--color-border-primary)' }}>
           <Stack gap="md">
             <Group justify="space-between" align="start">
               <div>

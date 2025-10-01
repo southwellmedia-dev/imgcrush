@@ -8,7 +8,6 @@ import { BulkRenameModal } from "./components/features/BulkRenameModal";
 import { AddImagesModal } from "./components/modals/AddImagesModal";
 import { GlobalSettingsModal } from "./components/modals/GlobalSettingsModal";
 import { ViewMode } from "./components/ui/ResultsHeader";
-import { ProductTour } from "./components/ui/ProductTour";
 import { ProcessedImage, ProcessingSettings } from "./types";
 import { applyPreset } from "./presets/compressionPresets";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
@@ -432,9 +431,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-mesh-animated" style={{ display: 'flex' }}>
-      {/* Product Tour - Enabled */}
-      <ProductTour hasImages={hasImages} />
-
       {/* Sidebar Navigation - Always visible */}
       <Sidebar
         onReset={handleClearAll}
