@@ -439,6 +439,8 @@ function App() {
                 onViewModeChange={setViewMode}
                 onDownloadAll={handleDownloadAll}
                 onAddImages={() => setAddImagesModalOpen(true)}
+                selectedPreset={selectedPreset}
+                onOpenSettings={() => setSettingsModalOpen(true)}
               />
 
               {/* Bulk Rename Callout Banner */}

@@ -156,7 +156,14 @@ export function Sidebar({ onReset, hasImages, onCollapsedChange, onOpenSettings,
               transition={{ duration: hasInteracted ? 0.2 : 0 }}
               style={{ height: '40px', cursor: 'pointer' }}
               onClick={onReset}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{
+                scale: 1.05,
+                transition: { duration: 0.2, ease: 'easeOut' }
+              }}
+              whileTap={{
+                scale: 0.95,
+                transition: { duration: 0.1 }
+              }}
             />
           )}
         </AnimatePresence>

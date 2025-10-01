@@ -1,10 +1,11 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { Group, Text, ActionIcon, Tooltip, Badge, Button } from '@mantine/core';
-import { Grid3x3, List, Download, Plus } from 'lucide-react';
+import { Grid3x3, List, Download, Plus, Settings2 } from 'lucide-react';
 import { motion, useMotionValue, useTransform, animate, useReducedMotion } from 'framer-motion';
 import { ViewMode } from './ResultsHeader';
 import { ProcessedImage } from '../../types';
 import { formatFileSize } from '../../utils/fileUtils';
+import { getPresetById } from '../../presets/compressionPresets';
 
 // Animated number component
 function AnimatedNumber({ value }: { value: number }) {
@@ -57,6 +58,8 @@ interface ResultsAreaHeaderProps {
   onViewModeChange: (mode: ViewMode) => void;
   onDownloadAll?: () => void;
   onAddImages?: () => void;
+  selectedPreset?: string;
+  onOpenSettings?: () => void;
 }
 
 export function ResultsAreaHeader({
@@ -65,6 +68,8 @@ export function ResultsAreaHeader({
   onViewModeChange,
   onDownloadAll,
   onAddImages,
+  selectedPreset,
+  onOpenSettings,
 }: ResultsAreaHeaderProps) {
   // Calculate compression stats
   const stats = useMemo(() => {
@@ -110,9 +115,33 @@ export function ResultsAreaHeader({
         {/* Left: Compression Stats */}
         <Group gap="xl">
           <div style={{ minWidth: '120px' }}>
-            <Text size="xs" c="dimmed" mb={4}>
-              Images
-            </Text>
+            {/* Preset Badge as Title */}
+            {selectedPreset ? (
+              <Tooltip
+                label={`Using ${getPresetById(selectedPreset)?.name || selectedPreset} preset`}
+                position="bottom"
+                withArrow
+              >
+                <Badge
+                  size="sm"
+                  variant="light"
+                  style={{
+                    backgroundColor: 'rgba(100, 116, 139, 0.1)',
+                    color: 'var(--color-text-tertiary)',
+                    border: '1px solid rgba(100, 116, 139, 0.15)',
+                    fontWeight: 600,
+                    marginBottom: '4px',
+                    cursor: 'help',
+                  }}
+                >
+                  {getPresetById(selectedPreset)?.name || selectedPreset}
+                </Badge>
+              </Tooltip>
+            ) : (
+              <Text size="xs" c="dimmed" mb={4}>
+                Images
+              </Text>
+            )}
             <Group gap="xs">
               <Text size="xl" fw={700} style={{ color: 'var(--color-text-primary)' }}>
                 <AnimatedNumber value={stats.processedImages} />
@@ -282,6 +311,23 @@ export function ResultsAreaHeader({
                 </ActionIcon>
               </Tooltip>
             </>
+          )}
+
+          {/* Global Settings Button */}
+          {onOpenSettings && (
+            <Tooltip label="Global settings" position="bottom">
+              <ActionIcon
+                variant="light"
+                size="lg"
+                onClick={onOpenSettings}
+                className="transition-smooth"
+                style={{
+                  borderRadius: '10px',
+                }}
+              >
+                <Settings2 size={20} />
+              </ActionIcon>
+            </Tooltip>
           )}
         </Group>
       </Group>

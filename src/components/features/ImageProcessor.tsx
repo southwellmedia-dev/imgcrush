@@ -68,26 +68,30 @@ function SortableImageCard(props: SortableImageCardProps) {
         aria-roledescription="draggable"
         style={{
           position: "absolute",
-          top: "8px",
-          right: "48px", // Position to the left of the delete button
+          top: "12px",
+          right: "60px", // Position to the left of the delete button (12px + 40px button + 8px gap)
           zIndex: 10,
           cursor: isDragging ? "grabbing" : "grab",
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          borderRadius: "4px",
-          padding: "4px",
+          backgroundColor: "rgba(0, 0, 0, 0.6)",
+          backdropFilter: "blur(8px)",
+          borderRadius: "10px",
+          width: "40px",
+          height: "40px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          transition: "background-color 0.2s",
+          transition: "background-color 0.2s, transform 0.2s",
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+          e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+          e.currentTarget.style.transform = "scale(1.05)";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+          e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.6)";
+          e.currentTarget.style.transform = "scale(1)";
         }}
       >
-        <GripVertical size={16} color="white" aria-hidden="true" />
+        <GripVertical size={18} color="white" aria-hidden="true" />
       </div>
 
       <ImageCard {...props} />

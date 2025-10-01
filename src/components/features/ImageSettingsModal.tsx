@@ -105,7 +105,7 @@ export function ImageSettingsModal({
       title={
         <Group gap="xs">
           <Settings2 size={18} />
-          <Text fw={600}>Settings: {image.originalFile.name}</Text>
+          <Text fw={600}>Settings: {image.customFileName || image.originalFile.name}</Text>
         </Group>
       }
       size="lg"

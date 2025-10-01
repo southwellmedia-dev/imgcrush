@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, X, Loader, Check, ArrowRight, Maximize2, FileType, Percent, AlertTriangle, RefreshCw, Eye, Settings2, Crop, Edit2, Save, XCircle } from 'lucide-react';
+import { Download, X, Loader, Check, ArrowRight, Maximize2, FileType, Percent, AlertTriangle, RefreshCw, Eye, Settings2, Crop, Edit2, Save, XCircle, GripVertical } from 'lucide-react';
 import { Card, Image as MantineImage, Text, Button, Group, Stack, Badge, Paper, Progress, Tooltip, ActionIcon, Alert, Modal, TextInput } from '@mantine/core';
+import { motion } from 'framer-motion';
 import { ProcessedImage, ProcessingSettings } from '../../types';
 import { formatFileSize } from '../../utils/fileUtils';
 import { ImageComparison } from '../comparison/ImageComparison';
@@ -16,9 +17,11 @@ interface ImageCardProps {
   onUpdateSettings?: (imageId: string, settings: ProcessingSettings) => void;
   onApplyToAll?: (settings: ProcessingSettings) => void;
   onUpdateFileName?: (imageId: string, fileName: string) => void;
+  dragHandleProps?: any;
+  isDragging?: boolean;
 }
 
-export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSettings, onUpdateSettings, onApplyToAll, onUpdateFileName }: ImageCardProps) {
+export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSettings, onUpdateSettings, onApplyToAll, onUpdateFileName, dragHandleProps, isDragging }: ImageCardProps) {
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
   const [processedUrl, setProcessedUrl] = useState<string | null>(null);
   const [originalDimensions, setOriginalDimensions] = useState<{ width: number; height: number } | null>(null);
@@ -200,17 +203,21 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
      originalDimensions.height !== processedDimensions.height);
 
   return (
-    <Card
-      shadow="none"
-      padding="0"
-      radius="lg"
-      className="glass elevation-xl hover-lift transition-smooth animate-scale-in overflow-hidden"
-      style={{
-        borderWidth: '1px',
-        borderColor: 'var(--color-border-glass)',
-      }}
-      data-tour="image-card"
+    <motion.div
+      whileHover={{ y: -4, scale: 1.01 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
     >
+      <Card
+        shadow="none"
+        padding="0"
+        radius="lg"
+        className="glass elevation-xl transition-smooth animate-scale-in overflow-hidden"
+        style={{
+          borderWidth: '1px',
+          borderColor: 'var(--color-border-glass)',
+        }}
+        data-tour="image-card"
+      >
       {/* Colored Top Accent Bar - Status Indicator */}
       {image.processed && (
         <div
@@ -290,6 +297,35 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
             >
               {fileSizeIncreased ? '+' : '-'}{Math.abs(compressionRatio).toFixed(0)}%
             </Badge>
+          )}
+
+          {/* Drag handle - Enhanced */}
+          {dragHandleProps && (
+            <ActionIcon
+              {...dragHandleProps}
+              variant="filled"
+              size="lg"
+              className="elevation-md transition-smooth"
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 60,
+                backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                backdropFilter: 'blur(8px)',
+                borderRadius: '10px',
+                cursor: 'grab',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(100, 100, 100, 0.8)';
+                e.currentTarget.style.transform = 'scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+            >
+              <GripVertical size={18} style={{ color: 'white' }} />
+            </ActionIcon>
           )}
 
           {/* Remove button - Enhanced */}
@@ -531,32 +567,6 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
         <Stack gap="sm">
           {image.processed ? (
             <>
-              {/* Primary Download Button */}
-              <Button
-                variant="filled"
-                size="md"
-                fullWidth
-                leftSection={<Download size={18} />}
-                onClick={handleDownload}
-                className="elevation-md transition-smooth"
-                style={{
-                  backgroundColor: 'var(--color-primary)',
-                  borderRadius: '10px',
-                  fontWeight: 600,
-                  height: '44px',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--color-primary-hover)';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--color-primary)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                Download
-              </Button>
-
               {/* Secondary Actions */}
               <Group grow>
                 {onCrop && (
@@ -697,5 +707,6 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
         </Modal>
       </Stack>
     </Card>
+    </motion.div>
   );
 }
