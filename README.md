@@ -7,11 +7,12 @@
 **A powerful, privacy-first image compression and optimization tool**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT)
-[![React](https://img.shields.io/badge/React-18.3-blue.svg)](https://reactjs.org/)
+[![React](https://img.shields.io/badge/React-19.1-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-5.4-purple.svg)](https://vitejs.dev/)
+[![Tailwind](https://img.shields.io/badge/Tailwind-4.1-cyan.svg)](https://tailwindcss.com/)
 
-[Report Bug](https://github.com/southwellmedia-dev/imgcrush/issues) | [Request Feature](https://github.com/southwellmedia-dev/imgcrush/issues)
+[**🚀 Try it Live**](https://imgcrush.vercel.app) | [Report Bug](https://github.com/southwellmedia-dev/imgcrush/issues) | [Request Feature](https://github.com/southwellmedia-dev/imgcrush/issues)
 
 </div>
 
@@ -26,12 +27,14 @@ Perfect for web developers, designers, content creators, and anyone who needs to
 ## ✨ Features
 
 ### Core Functionality
-- 🖼️ **Multi-Format Support** - Output to JPEG, PNG, or WebP formats
+- 🖼️ **Multi-Format Support** - Output to JPEG, PNG, WebP, or AVIF formats
+- 📱 **HEIC Auto-Convert** - Automatic conversion of iOS HEIC photos to compatible formats
 - 🎨 **Compression Presets** - Pre-configured settings for common use cases (Web, Email, Social Media)
 - 🔄 **Real-Time Processing** - See results instantly as you upload
 - 📐 **Smart Resizing** - Three resize modes with aspect ratio preservation
 - 🔍 **Visual Comparison** - Interactive slider to compare original vs. compressed images
-- 📦 **Batch Download** - Export all processed images as a ZIP file
+- 📦 **Batch Download** - Export all processed images as a ZIP file with custom filenames
+- 🔒 **EXIF Privacy** - Automatically strips metadata for privacy protection
 
 ### Privacy & Performance
 - 🔒 **100% Client-Side** - All processing happens in your browser—zero uploads
@@ -40,11 +43,17 @@ Perfect for web developers, designers, content creators, and anyone who needs to
 - 📱 **Fully Responsive** - Works seamlessly on desktop, tablet, and mobile
 
 ### User Experience
-- ✨ **Drag & Drop** - Simple file upload with drag-and-drop support
-- 📋 **Clipboard Paste** - Paste images directly from clipboard
-- 🎛️ **Advanced Controls** - Fine-tune quality, dimensions, and format
+- ✨ **Drag & Drop Upload** - Simple file upload with drag-and-drop support
+- 🎯 **Drag to Reorder** - Reorder images by dragging the grip handle
+- 📋 **Clipboard Paste** - Paste images directly from clipboard (Ctrl/Cmd + V)
+- ✏️ **Inline Filename Editing** - Rename files before download with click-to-edit
+- 🎛️ **Advanced Controls** - Fine-tune quality, dimensions, and format per image
 - 📊 **Detailed Stats** - See file size savings and dimension changes
 - ⚡ **Live Regeneration** - Adjust settings and regenerate on the fly
+- ⌨️ **Keyboard Shortcuts** - Ctrl+V paste, Ctrl+S save, Space toggle comparison
+- 🌓 **Dark Mode** - Beautiful dark theme with seamless toggle
+- 💾 **Settings Persistence** - Your preferences saved in localStorage
+- 🎓 **Product Tour** - Interactive guide for first-time users
 
 ## 🚀 Quick Start
 
@@ -133,16 +142,18 @@ npm run lint
 ## 🛠️ Tech Stack
 
 ### Core Technologies
-- **Frontend Framework**: [React 18](https://reactjs.org/) with [TypeScript](https://www.typescriptlang.org/)
+- **Frontend Framework**: [React 19](https://reactjs.org/) with [TypeScript](https://www.typescriptlang.org/)
 - **Build Tool**: [Vite 5.4](https://vitejs.dev/) - Lightning-fast builds and HMR
-- **Component Library**: [Mantine UI v7](https://mantine.dev/) - Modern React components
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/) + Mantine theming
+- **Component Library**: [Mantine UI v8](https://mantine.dev/) - Modern React components
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) with CSS-first configuration + Mantine theming
 
 ### Processing & Utilities
 - **Image Processing**: HTML5 Canvas API - Client-side image manipulation
+- **HEIC Conversion**: [heic2any](https://github.com/alexcorvi/heic2any) - iOS photo format support
+- **Drag & Drop**: [@dnd-kit](https://dndkit.com/) - Accessible drag and drop toolkit
 - **Archive Creation**: [JSZip](https://stuk.github.io/jszip/) - ZIP file generation
 - **Icons**: [Lucide React](https://lucide.dev/) - Beautiful, consistent icons
-- **File Utilities**: Custom utility functions for file handling
+- **File Utilities**: Custom utility functions for file handling and EXIF processing
 
 ### Development Tools
 - **Language**: TypeScript 5.5 - Type-safe development
@@ -163,44 +174,47 @@ imgcrush/
 │   │   ├── ui/                  # UI components
 │   │   │   ├── Header.tsx
 │   │   │   ├── Footer.tsx
-│   │   │   └── ResultsHeader.tsx
+│   │   │   ├── ResultsHeader.tsx
+│   │   │   └── ProductTour.tsx  # Interactive tour
 │   │   ├── features/            # Feature components
-│   │   │   ├── ImageUpload.tsx  # Drag & drop upload
-│   │   │   ├── ImageCard.tsx    # Image thumbnail display
-│   │   │   ├── ImageProcessor.tsx # Processing orchestration
+│   │   │   ├── ImageUpload.tsx  # Drag & drop upload with HEIC support
+│   │   │   ├── ImageCard.tsx    # Image display with inline editing
+│   │   │   ├── ImageProcessor.tsx # Processing orchestration with drag-to-reorder
 │   │   │   ├── ProcessingControls.tsx # Settings panel
-│   │   │   ├── DownloadAll.tsx  # Batch download
-│   │   │   └── PresetSelector.tsx # Compression presets
+│   │   │   ├── DownloadAll.tsx  # Batch ZIP download
+│   │   │   ├── PresetSelector.tsx # Compression presets
+│   │   │   ├── ImageSettingsModal.tsx # Per-image settings
+│   │   │   └── CropModal.tsx    # Crop tool (in progress)
 │   │   └── comparison/          # Comparison tools
 │   │       └── ImageComparison.tsx # Before/after slider
-│   ├── processing/              # Processing pipeline
-│   │   ├── ProcessingPipeline.ts # Main pipeline orchestrator
-│   │   ├── types.ts             # Processing interfaces
-│   │   └── processors/          # Individual processors
-│   │       ├── ResizeProcessor.ts
-│   │       ├── QualityProcessor.ts
-│   │       └── FormatProcessor.ts
+│   ├── hooks/                   # React hooks
+│   │   └── useKeyboardShortcuts.tsx # Keyboard shortcuts
 │   ├── presets/                 # Compression presets
 │   │   └── compressionPresets.ts
 │   ├── utils/                   # Utility functions
 │   │   ├── imageProcessor.ts    # Canvas-based processing
-│   │   └── fileUtils.ts         # File utilities
+│   │   ├── fileUtils.ts         # File utilities
+│   │   ├── heicConverter.ts     # HEIC to JPEG conversion
+│   │   ├── exifHandler.ts       # EXIF metadata handling
+│   │   └── settingsStorage.ts   # localStorage persistence
 │   ├── types/                   # TypeScript definitions
 │   │   └── index.ts
 │   ├── App.tsx                  # Root component
 │   ├── main.tsx                 # Entry point
-│   └── index.css                # Global styles
+│   └── index.css                # Global styles with Tailwind v4 & CSS variables
 ├── docs/                        # Documentation
+│   ├── DEVELOPER_GUIDE.md       # Developer guide
 │   ├── CLAUDE.md                # AI assistant guidelines
 │   ├── CONTRIBUTING.md          # Contribution guide
 │   └── SECURITY.md              # Security policy
 ├── public/                      # Static assets
 │   ├── logo.svg
+│   ├── logo-darkmode.svg        # Dark mode logo
 │   └── favicon.svg
 ├── package.json                 # Dependencies
 ├── tsconfig.json                # TypeScript config
 ├── vite.config.ts               # Vite configuration
-└── tailwind.config.js           # Tailwind config
+└── README.md                    # This file
 ```
 
 ## 🎯 Roadmap
@@ -209,25 +223,33 @@ imgcrush/
 - [x] Compression presets for common use cases
 - [x] Image comparison slider (slider, side-by-side, toggle modes)
 - [x] Paste from clipboard support
-- [x] Batch download as ZIP
+- [x] Batch download as ZIP with custom filenames
 - [x] Real-time processing with instant feedback
 - [x] Aspect ratio lock for exact dimensions
 - [x] Responsive grid layout with adaptive drop zone
+- [x] AVIF format support
+- [x] HEIC input format support (iOS photos with auto-conversion)
+- [x] Dark/Light theme toggle with localStorage persistence
+- [x] EXIF data automatic stripping for privacy
+- [x] Keyboard shortcuts (Ctrl+V, Ctrl+S, Space)
+- [x] Drag-to-reorder images with grip handle
+- [x] Inline filename editing with click-to-edit
+- [x] Product tour for first-time users
+- [x] Per-image settings with "Apply to All" option
+- [x] React 19 and Tailwind CSS v4 upgrade
 
 ### In Progress 🚧
+- [ ] Crop tool (UI complete, integration pending)
 - [ ] PWA support for offline use
 - [ ] Performance optimizations for large batches
 
 ### Planned 📋
-- [ ] AVIF format support
-- [ ] HEIC input format support (iOS photos)
-- [ ] Dark/Light theme toggle
-- [ ] EXIF data preservation option
-- [ ] Basic editing tools (crop, rotate, flip)
 - [ ] Watermark support
-- [ ] Image filters and adjustments
-- [ ] Keyboard shortcuts
+- [ ] Image filters and adjustments (brightness, contrast, saturation)
+- [ ] Rotate and flip tools
 - [ ] Multi-language support (i18n)
+- [ ] Batch preset application
+- [ ] Export settings profiles
 
 ## 🤝 Contributing
 
@@ -268,6 +290,7 @@ ImgCrush works in all modern browsers that support:
 
 ## 🔗 Links
 
+- [Live Demo](https://imgcrush.vercel.app) - Try ImgCrush now!
 - [GitHub Repository](https://github.com/southwellmedia-dev/imgcrush)
 - [Issue Tracker](https://github.com/southwellmedia-dev/imgcrush/issues)
 - [Documentation](docs/)
