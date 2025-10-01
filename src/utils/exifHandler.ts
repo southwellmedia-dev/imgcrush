@@ -108,6 +108,16 @@ export async function hasExifData(blob: Blob): Promise<boolean> {
         segments++;
         const marker = view.getUint16(offset, false);
 
+        // Check for standalone markers (no length field)
+        if (
+          marker === 0xffd9 ||           // EOI
+          (marker >= 0xffd0 && marker <= 0xffd8) || // RSTn, SOI
+          marker === 0xff01            // TEM
+        ) {
+          offset += 2;
+          continue;
+        }
+
         if (marker === 0xffe1) {
           // Ensure we can read 4 bytes at offset+4..+7 safely
           if (offset + 7 < view.byteLength) {
@@ -144,8 +154,16 @@ export async function hasExifData(blob: Blob): Promise<boolean> {
       }
 
       return false;
-    }
+    }        if (offset + 2 + segmentLength > view.byteLength) {
+          console.warn('JPEG segment length extends past buffer');
+          return false;
+        }
 
+        offset += 2 + segmentLength;
+      }
+
+      return false;
+    }
     if (isPng) {
       // PNG: scan chunks for eXIf (chunk type ASCII 'eXIf')
       let offset = 8; // skip signature
