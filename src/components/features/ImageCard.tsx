@@ -214,16 +214,15 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
             <MantineImage
               src={processedUrl}
               alt="Processed"
-              height={250}
               fit="cover"
+              style={{ height: '100%', width: '100%' }}
             />
           ) : originalUrl ? (
             <MantineImage
               src={originalUrl}
               alt="Original"
-              height={250}
               fit="cover"
-              style={{ opacity: 0.5 }}
+              style={{ opacity: 0.5, height: '100%', width: '100%' }}
             />
           ) : null}
 
