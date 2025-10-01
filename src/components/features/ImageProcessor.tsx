@@ -207,7 +207,7 @@ export function ImageProcessor({
   };
 
   return (
-    <div className="space-y-6">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
       {/* Conditional rendering based on view mode */}
       {viewMode === "grid" ? (
         <>
@@ -221,7 +221,7 @@ export function ImageProcessor({
               items={images.map((img) => img.id)}
               strategy={rectSortingStrategy}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ gap: '16px' }}>
                 {images.map((image) => (
                   <SortableImageCard
                     key={image.id}

@@ -312,7 +312,7 @@ function App() {
               onViewModeChange={setViewMode}
             />
             <div className="container mx-auto px-4 py-8">
-              <div className="max-w-7xl mx-auto space-y-8">
+              <div className="max-w-7xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                 <ImageProcessor
                   images={processedImages}
                   settings={processingSettings}

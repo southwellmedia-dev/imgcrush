@@ -200,7 +200,7 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
      originalDimensions.height !== processedDimensions.height);
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder data-tour="image-card">
+    <Card shadow="sm" padding="lg" radius="md" withBorder style={{ borderWidth: '2px', borderColor: 'var(--color-border-primary)' }} data-tour="image-card">
       <Card.Section>
         <div style={{ position: 'relative', backgroundColor: 'var(--color-bg-secondary)', height: 250, overflow: 'hidden' }}>
           {image.processing ? (
@@ -252,7 +252,7 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
         </div>
       </Card.Section>
 
-      <Stack gap="sm" mt="md">
+      <Stack gap="md" mt="md">
         {/* Filename with inline editing */}
         {isEditingName ? (
           <Group gap="xs" align="center">
@@ -314,8 +314,8 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
 
         {/* Optimization Details */}
         {image.processed && (
-          <Paper p="sm" radius="md" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
-            <Stack gap="xs">
+          <Paper p="md" radius="md" withBorder style={{ backgroundColor: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-primary)' }}>
+            <Stack gap="sm">
               {/* File Size */}
               <Group justify="space-between">
                 <Group gap={4}>
@@ -339,15 +339,20 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
                     <Text size="xs" c="dimmed">Dimensions</Text>
                   </Group>
                   {dimensionsChanged ? (
-                    <Group gap="xs">
-                      <Text size="xs">
-                        {originalDimensions.width}×{originalDimensions.height}
-                      </Text>
-                      <ArrowRight size={12} />
-                      <Text size="xs" fw={600} c="red">
-                        {processedDimensions.width}×{processedDimensions.height}
-                      </Text>
-                    </Group>
+                    <Tooltip
+                      label={`Original: ${originalDimensions.width}×${originalDimensions.height}`}
+                      withArrow
+                      position="top"
+                    >
+                      <Group gap="xs" style={{ cursor: 'help' }}>
+                        <Text size="xs" fw={600}>
+                          {processedDimensions.width}×{processedDimensions.height}
+                        </Text>
+                        <Badge size="xs" color="blue" variant="light">
+                          {Math.round((processedDimensions.width / originalDimensions.width) * 100)}%
+                        </Badge>
+                      </Group>
+                    </Tooltip>
                   ) : (
                     <Text size="xs" fw={600}>
                       {processedDimensions.width}×{processedDimensions.height}
@@ -388,7 +393,7 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
           </Paper>
         )}
 
-        <Stack gap="sm">
+        <Stack gap="md">
           {image.processed ? (
             <Group grow>
               <Tooltip label="Download compressed image">

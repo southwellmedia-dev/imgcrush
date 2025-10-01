@@ -1,5 +1,5 @@
 // React import not required with new JSX transform
-import { Download, Package, TrendingDown, Check, Trash2 } from "lucide-react";
+import { Download, Package, TrendingDown, Check, Trash2, Sparkles, Archive, CheckCircle2 } from "lucide-react";
 import {
   Paper,
   Group,
@@ -82,179 +82,146 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
     <Paper
       p="xl"
       radius="md"
+      withBorder
       style={{
-        background: "var(--color-bg-tertiary)",
-        border: "1px solid var(--color-border-primary)",
+        background: "var(--color-bg-elevated)",
+        borderColor: "var(--color-border-primary)",
+        borderWidth: "2px",
       }}
       data-tour="batch-download"
     >
-      <Group justify="space-between" align="center" wrap="wrap" gap="xl">
-        <Stack gap="md" style={{ flex: 1 }}>
-          <div>
-            <Group gap="sm" mb={4}>
-              <Package size={24} color="var(--color-primary)" />
-              <Text
-                size="xl"
-                fw={700}
-                style={{ color: "var(--color-text-primary)" }}
-              >
-                {processedImages.length}{" "}
-                {processedImages.length === 1 ? "Image" : "Images"} Ready
+      <Stack gap="lg">
+        {/* Header */}
+        <Group justify="space-between" align="flex-start" wrap="wrap">
+          <Stack gap={4}>
+            <Group gap="xs">
+              <CheckCircle2 size={22} color="#10b981" strokeWidth={2.5} />
+              <Text size="xl" fw={700} style={{ color: "var(--color-text-primary)" }}>
+                {processedImages.length} {processedImages.length === 1 ? "Image" : "Images"} Ready
               </Text>
             </Group>
-            <Text size="sm" style={{ color: "var(--color-text-tertiary)" }}>
-              All images optimized and ready to download
+            <Text size="sm" c="dimmed">
+              All images have been optimized successfully
             </Text>
-          </div>
+          </Stack>
+          <Badge
+            size="lg"
+            variant="light"
+            color="green"
+            leftSection={<Package size={16} />}
+          >
+            {processedImages.length} {processedImages.length === 1 ? "file" : "files"}
+          </Badge>
+        </Group>
 
-          <Group gap="xl" wrap="wrap">
-            <Paper
-              p="lg"
-              radius="md"
-              withBorder
-              style={{
-                backgroundColor: "var(--color-bg-elevated)",
-                borderColor: "#ef4444",
-                borderWidth: "2px",
-                minWidth: "180px",
-              }}
-            >
-              <Group gap="xs" mb={8}>
-                <Package size={18} color="#ef4444" />
-                <Text
-                  size="sm"
-                  style={{ color: "var(--color-text-secondary)" }}
-                  fw={600}
-                >
-                  Original Size
-                </Text>
-              </Group>
-              <Text size="xl" fw={700} style={{ color: "#ef4444" }}>
+        {/* Stats Grid */}
+        <Group gap="lg" grow>
+          <Paper
+            p="md"
+            radius="md"
+            withBorder
+            style={{
+              borderColor: "var(--color-border-primary)",
+              background: "var(--color-bg-secondary)",
+            }}
+          >
+            <Stack gap="xs">
+              <Text size="xs" c="dimmed" fw={600} tt="uppercase" style={{ letterSpacing: "0.5px" }}>
+                Original Size
+              </Text>
+              <Text size="xl" fw={700} style={{ color: "var(--color-text-primary)" }}>
                 {formatFileSize(totalOriginalSize)}
               </Text>
-            </Paper>
+            </Stack>
+          </Paper>
 
-            <Paper
-              p="lg"
-              radius="md"
-              withBorder
-              style={{
-                backgroundColor: "var(--color-bg-elevated)",
-                borderColor: "#10b981",
-                borderWidth: "2px",
-                minWidth: "180px",
-              }}
-            >
-              <Group gap="xs" mb={8}>
-                <Check size={18} color="#10b981" />
-                <Text
-                  size="sm"
-                  style={{ color: "var(--color-text-secondary)" }}
-                  fw={600}
-                >
-                  Compressed
-                </Text>
-              </Group>
+          <Paper
+            p="md"
+            radius="md"
+            withBorder
+            style={{
+              borderColor: "var(--color-border-primary)",
+              background: "var(--color-bg-secondary)",
+            }}
+          >
+            <Stack gap="xs">
+              <Text size="xs" c="dimmed" fw={600} tt="uppercase" style={{ letterSpacing: "0.5px" }}>
+                Optimized Size
+              </Text>
               <Text size="xl" fw={700} style={{ color: "#10b981" }}>
                 {formatFileSize(totalProcessedSize)}
               </Text>
-            </Paper>
+            </Stack>
+          </Paper>
 
-            <Paper
-              p="lg"
-              radius="md"
-              withBorder
-              style={{
-                backgroundColor: "var(--color-bg-elevated)",
-                borderColor: "#10b981",
-                borderWidth: "2px",
-                minWidth: "180px",
-              }}
-            >
-              <Group gap="xs" mb={8}>
-                <TrendingDown size={18} color="#10b981" />
-                <Text
-                  size="sm"
-                  style={{ color: "var(--color-text-secondary)" }}
-                  fw={600}
-                >
-                  Space Saved
+          <Paper
+            p="md"
+            radius="md"
+            style={{
+              background: "#10b981",
+              border: "none",
+            }}
+          >
+            <Stack gap="xs">
+              <Text size="xs" fw={600} tt="uppercase" style={{ color: "rgba(255, 255, 255, 0.9)", letterSpacing: "0.5px" }}>
+                Space Saved
+              </Text>
+              <Group gap="xs" align="baseline">
+                <Text size="xl" fw={700} style={{ color: "white" }}>
+                  {compressionRatio.toFixed(1)}%
+                </Text>
+                <Text size="sm" fw={600} style={{ color: "rgba(255, 255, 255, 0.9)" }}>
+                  ({formattedSaved})
                 </Text>
               </Group>
-              <Group gap="sm" align="center">
-                <Text size="xl" fw={700} style={{ color: "#10b981" }}>
-                  {compressionRatio.toFixed(0)}%
-                </Text>
-                <Badge
-                  variant="filled"
-                  style={{ backgroundColor: "#10b981", color: "white" }}
-                  size="lg"
-                >
-                  {formattedSaved}
-                </Badge>
-              </Group>
-            </Paper>
+            </Stack>
+          </Paper>
+        </Group>
+
+        {/* Progress Bar */}
+        <Stack gap="xs">
+          <Group justify="space-between">
+            <Text size="xs" fw={600} c="dimmed">
+              Overall Compression
+            </Text>
+            <Text size="xs" fw={600} style={{ color: "#10b981" }}>
+              {compressionRatio.toFixed(1)}% reduction
+            </Text>
           </Group>
-
           <Progress
             value={compressionRatio}
             size="lg"
             radius="xl"
             color="green"
-            style={{
-              maxWidth: 500,
-            }}
           />
         </Stack>
 
-        <Group gap="md">
+        {/* Action Buttons */}
+        <Group justify="space-between" wrap="wrap" gap="md">
           {onClearAll && (
             <Button
-              size="xl"
-              leftSection={<Trash2 size={20} />}
+              size="md"
+              leftSection={<Trash2 size={18} />}
               onClick={onClearAll}
-              variant="outline"
+              variant="light"
               color="gray"
-              styles={{
-                root: {
-                  fontSize: "15px",
-                  fontWeight: 600,
-                  paddingLeft: "28px",
-                  paddingRight: "28px",
-                  height: "56px",
-                  borderWidth: "2px",
-                  color: "var(--color-text-primary)",
-                  borderColor: "var(--color-border-primary)",
-                  "&:hover": {
-                    backgroundColor: "var(--color-hover-bg)",
-                    borderColor: "var(--color-text-secondary)",
-                  },
-                },
-              }}
             >
               Clear All
             </Button>
           )}
           <Button
-            size="xl"
-            leftSection={<Download size={24} />}
+            size="md"
+            leftSection={<Download size={20} />}
+            rightSection={<Archive size={16} />}
             onClick={handleDownloadAll}
             color="red"
             variant="filled"
-            styles={{
-              root: {
-                fontSize: "17px",
-                fontWeight: 700,
-                paddingLeft: "40px",
-                paddingRight: "40px",
-                height: "56px",
-              },
-            }}
+            style={{ marginLeft: "auto" }}
           >
             Download All as ZIP
           </Button>
         </Group>
-      </Group>
+      </Stack>
     </Paper>
   );
 }

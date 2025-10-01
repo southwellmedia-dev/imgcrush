@@ -72,8 +72,8 @@ export function ProcessingControls({
   if (collapsed) {
     return (
       <Stack gap="md" mb="xl">
-        <Paper p="lg" withBorder radius="md" style={{ backgroundColor: 'var(--color-bg-secondary)' }} data-tour="global-settings">
-          <Stack gap="sm">
+        <Paper p="xl" withBorder radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', borderWidth: '2px', borderColor: 'var(--color-border-primary)' }} data-tour="global-settings">
+          <Stack gap="md">
             <Group justify="space-between" align="start">
               <div>
                 <Group gap="xs" mb={4}>
@@ -149,8 +149,8 @@ export function ProcessingControls({
   // Expanded view - full settings
   return (
     <Stack gap="md" mb="xl">
-      <Paper p="lg" withBorder radius="md" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
-        <Stack gap="sm">
+      <Paper p="xl" withBorder radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', borderWidth: '2px', borderColor: 'var(--color-border-primary)' }}>
+        <Stack gap="md">
           <Group justify="space-between" align="start">
             <div>
               <Group gap="xs" mb={4}>
@@ -192,7 +192,7 @@ export function ProcessingControls({
         </Stack>
 
         {/* Current Preset & Settings Display */}
-        <Paper p="md" radius="md" withBorder mb="md" mt="md" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
+        <Paper p="md" radius="md" withBorder mb="md" mt="md" style={{ backgroundColor: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-primary)' }}>
           <Stack gap="sm">
             <Group justify="space-between" align="start">
               <div style={{ flex: 1 }}>
@@ -497,7 +497,7 @@ export function ProcessingControls({
                 </Stack>
 
                 {/* EXIF Metadata Toggle */}
-                <Paper p="md" radius="md" withBorder mt="md" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
+                <Paper p="md" radius="md" withBorder mt="md" style={{ backgroundColor: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-primary)' }}>
                   <Group justify="space-between" align="center">
                     <div>
                       <Text size="sm" fw={500}>EXIF Metadata Privacy</Text>

@@ -190,10 +190,11 @@ export function ImageUpload({
           {/* Drop Zone */}
           <label
             htmlFor="file-input"
-            className="block border-2 border-dashed rounded-xl p-12 transition-all duration-200 cursor-pointer"
+            className="block border-2 border-dashed p-12 transition-all duration-200 cursor-pointer"
             style={{
               borderColor: isDragging ? 'var(--color-dropzone-active-border)' : 'var(--color-dropzone-border)',
               backgroundColor: isDragging ? 'var(--color-dropzone-active-bg)' : 'var(--color-dropzone-bg)',
+              borderRadius: '8px',
             }}
             onDragOver={(e) => {
               e.preventDefault();
@@ -219,7 +220,7 @@ export function ImageUpload({
           </label>
 
           {/* Preset Selector */}
-          <Paper p="lg" radius="md" withBorder>
+          <Paper p="lg" radius="md" withBorder style={{ borderColor: 'var(--color-border-primary)' }}>
             <PresetSelector
               selectedPreset={selectedPreset}
               onPresetChange={(presetId) => {
@@ -265,12 +266,13 @@ export function ImageUpload({
 
   // Original non-minimal version for when images are loaded
   return (
-    <div className="bg-elevated border border-primary rounded-lg p-4 h-full flex flex-col">
+    <div className="bg-elevated border border-primary p-4 h-full flex flex-col" style={{ borderRadius: '8px', borderWidth: '1px', borderColor: 'var(--color-border-primary)' }}>
       <div
-        className="border-2 border-dashed rounded-lg p-6 text-center transition-all duration-200 flex-1 flex flex-col items-center justify-center"
+        className="border-2 border-dashed p-6 text-center transition-all duration-200 flex-1 flex flex-col items-center justify-center"
         style={{
           borderColor: isDragging ? 'var(--color-dropzone-active-border)' : 'var(--color-dropzone-border)',
           backgroundColor: isDragging ? 'var(--color-dropzone-active-bg)' : 'var(--color-dropzone-bg)',
+          borderRadius: '8px',
         }}
         onDragOver={(e) => {
           e.preventDefault();
