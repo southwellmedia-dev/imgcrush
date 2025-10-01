@@ -4,7 +4,7 @@ import { ImageProcessor } from "./components/features/ImageProcessor";
 import { Sidebar } from "./components/ui/Sidebar";
 import { ResultsAreaHeader } from "./components/ui/ResultsAreaHeader";
 import { BulkRenameCallout } from "./components/ui/BulkRenameCallout";
-import { BulkRenameModal } from "./components/features/BulkRenameModal";
+import { BulkRenameModal } from "./components/modals/BulkRenameModal";
 import { AddImagesModal } from "./components/modals/AddImagesModal";
 import { GlobalSettingsModal } from "./components/modals/GlobalSettingsModal";
 import { ViewMode } from "./components/ui/ResultsHeader";
@@ -144,13 +144,6 @@ function App() {
         processedSize: 0
       }))
     );
-  }, []);
-
-  const handleScrollToCustomize = useCallback(() => {
-    const settingsElement = document.getElementById('settings-section');
-    if (settingsElement) {
-      settingsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
   }, []);
 
   const handleDownloadAll = useCallback(async () => {
@@ -521,7 +514,6 @@ function App() {
                 settings={processingSettings}
                 onRemoveImage={handleRemoveFile}
                 onUpdateImage={updateProcessedImage}
-                onCustomize={handleScrollToCustomize}
                 onUpdateImageSettings={handleUpdateImageSettings}
                 onApplyToAll={handleApplySettingsToAll}
                 onClearAll={handleClearAll}

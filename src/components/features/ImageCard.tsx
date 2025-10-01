@@ -5,8 +5,8 @@ import { motion } from 'framer-motion';
 import { ProcessedImage, ProcessingSettings } from '../../types';
 import { formatFileSize } from '../../utils/fileUtils';
 import { ImageComparison } from '../comparison/ImageComparison';
-import { ImageSettingsModal } from './ImageSettingsModal';
-import { CropModal } from './CropModal';
+import { ImageSettingsModal } from '../modals/ImageSettingsModal';
+import { CropModal } from '../modals/CropModal';
 
 // Static styles extracted outside component to prevent re-creation on every render
 const CARD_STYLES = {
@@ -394,11 +394,29 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
           </Group>
         ) : (
           <Group gap="xs" align="center" wrap="nowrap">
-            <Text size="sm" fw={500} style={{ wordBreak: 'break-word', flex: 1 }}>
-              {image.customFileName
-                ? image.customFileName
-                : splitFileName(image.originalFile.name).base}
-            </Text>
+            <Tooltip
+              label={image.customFileName || splitFileName(image.originalFile.name).base}
+              withArrow
+              position="top"
+              openDelay={500}
+              style={{ maxWidth: '100%' }}
+            >
+              <Text
+                size="sm"
+                fw={500}
+                style={{
+                  flex: 1,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  cursor: 'default'
+                }}
+              >
+                {image.customFileName
+                  ? image.customFileName
+                  : splitFileName(image.originalFile.name).base}
+              </Text>
+            </Tooltip>
             {image.outputFormat && (
               <Tooltip
                 label={

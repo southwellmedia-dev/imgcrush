@@ -94,7 +94,6 @@ interface ImageProcessorProps {
   onRemoveImage: (id: string) => void;
   onUpdateImage: (id: string, update: Partial<ProcessedImage>) => void;
   onFilesSelected?: (files: File[]) => void;
-  onCustomize?: () => void;
   onUpdateImageSettings?: (
     imageId: string,
     settings: ProcessingSettings
@@ -113,7 +112,6 @@ export function ImageProcessor({
   onRemoveImage,
   onUpdateImage,
   onFilesSelected,
-  onCustomize,
   onUpdateImageSettings,
   onApplyToAll,
   onClearAll,
@@ -216,13 +214,7 @@ export function ImageProcessor({
               items={images.map((img) => img.id)}
               strategy={rectSortingStrategy}
             >
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: `repeat(${Math.min(images.length, 4)}, 1fr)`,
-                  gap: '24px',
-                }}
-              >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {images.map((image, index) => (
                   <SortableImageCard
                     key={image.id}

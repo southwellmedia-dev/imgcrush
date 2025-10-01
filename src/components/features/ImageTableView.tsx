@@ -3,7 +3,7 @@ import { Table, Text, Badge, ActionIcon, Group, Tooltip, Image as MantineImage }
 import { Download, Settings2, Eye, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
 import { ProcessedImage, ProcessingSettings } from '../../types';
 import { formatFileSize } from '../../utils/fileUtils';
-import { ImageSettingsModal } from './ImageSettingsModal';
+import { ImageSettingsModal } from '../modals/ImageSettingsModal';
 import { ImageComparison } from '../comparison/ImageComparison';
 
 interface ImageTableViewProps {
