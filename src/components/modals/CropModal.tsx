@@ -5,6 +5,27 @@ import Cropper from 'react-easy-crop';
 import { Crop, X } from 'lucide-react';
 import { Area, Point } from 'react-easy-crop/types';
 
+// Static styles for consistent theming
+const MODAL_STYLES = {
+  body: { padding: 0 },
+  header: {
+    backgroundColor: 'var(--color-bg-elevated)',
+    borderBottom: '1px solid var(--color-border-primary)',
+  },
+};
+
+const CONTROLS_CONTAINER_STYLES = {
+  padding: '24px',
+  background: 'var(--color-bg-elevated)',
+  borderTop: '1px solid var(--color-border-primary)',
+};
+
+const BUTTON_STYLES = {
+  borderRadius: '10px',
+  fontWeight: 600,
+  height: '44px',
+};
+
 interface CropModalProps {
   opened: boolean;
   onClose: () => void;
@@ -164,11 +185,17 @@ export function CropModal({ opened, onClose, imageUrl, imageName, imageFormat, o
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Crop Image"
+      title={
+        <Group gap="xs">
+          <Crop size={20} />
+          <Text fw={700} style={{ color: 'var(--color-text-primary)' }}>Crop Image</Text>
+        </Group>
+      }
       size="xl"
-      styles={{
-        body: { padding: 0 },
-        header: { backgroundColor: 'var(--color-bg-secondary)' },
+      centered
+      styles={MODAL_STYLES}
+      classNames={{
+        content: 'glass-strong elevation-xl'
       }}
     >
       <Stack gap="md">
@@ -186,11 +213,13 @@ export function CropModal({ opened, onClose, imageUrl, imageName, imageFormat, o
         </div>
 
         {/* Controls */}
-        <div style={{ padding: '1rem', backgroundColor: 'var(--color-bg-secondary)' }}>
-          <Stack gap="md">
+        <div style={CONTROLS_CONTAINER_STYLES}>
+          <Stack gap="lg">
             {/* Aspect Ratio Selector */}
             <div>
-              <Text size="sm" fw={500} mb="xs">Aspect Ratio</Text>
+              <Text size="sm" fw={600} mb="xs" style={{ color: 'var(--color-text-primary)' }}>
+                Aspect Ratio
+              </Text>
               <SegmentedControl
                 value={aspect?.toString() || '0'}
                 onChange={(value) => {
@@ -199,12 +228,27 @@ export function CropModal({ opened, onClose, imageUrl, imageName, imageFormat, o
                 }}
                 data={aspectRatios}
                 fullWidth
+                color="red"
+                size="md"
+                styles={{
+                  root: {
+                    backgroundColor: 'var(--color-bg-tertiary)',
+                    borderRadius: '10px',
+                  },
+                }}
               />
             </div>
 
             {/* Zoom Slider */}
             <div>
-              <Text size="sm" fw={500} mb="xs">Zoom: {zoom.toFixed(1)}x</Text>
+              <Group justify="space-between" mb="xs">
+                <Text size="sm" fw={600} style={{ color: 'var(--color-text-primary)' }}>
+                  Zoom
+                </Text>
+                <Text size="sm" fw={500} style={{ color: 'var(--color-primary)' }}>
+                  {zoom.toFixed(1)}x
+                </Text>
+              </Group>
               <input
                 type="range"
                 min={1}
@@ -212,26 +256,29 @@ export function CropModal({ opened, onClose, imageUrl, imageName, imageFormat, o
                 step={0.1}
                 value={zoom}
                 onChange={(e) => setZoom(parseFloat(e.target.value))}
-                style={{ width: '100%' }}
+                className="crop-zoom-slider"
               />
             </div>
 
             {/* Action Buttons */}
             <Group justify="space-between" mt="md">
               <Button
-                variant="subtle"
+                variant="light"
                 color="gray"
-                leftSection={<X size={16} />}
+                leftSection={<X size={18} />}
                 onClick={onClose}
                 disabled={isProcessing}
+                className="transition-smooth"
+                style={{ ...BUTTON_STYLES, minWidth: '140px' }}
               >
                 Cancel
               </Button>
               <Button
-                leftSection={<Crop size={16} />}
+                leftSection={<Crop size={18} />}
                 onClick={handleCrop}
                 loading={isProcessing}
-                color="red"
+                className="btn-primary-hover elevation-md"
+                style={{ ...BUTTON_STYLES, minWidth: '160px' }}
               >
                 Apply Crop
               </Button>

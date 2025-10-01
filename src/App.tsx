@@ -1,14 +1,19 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { ImageUpload } from "./components/features/ImageUpload";
 import { ImageProcessor } from "./components/features/ImageProcessor";
-import { ProcessingControls } from "./components/features/ProcessingControls";
-import { ResultsHeader, ViewMode } from "./components/ui/ResultsHeader";
-import { Footer } from "./components/ui/Footer";
-import { ProductTour } from "./components/ui/ProductTour";
+import { Sidebar } from "./components/ui/Sidebar";
+import { ResultsAreaHeader } from "./components/ui/ResultsAreaHeader";
+import { BulkRenameCallout } from "./components/ui/BulkRenameCallout";
+import { BulkRenameModal } from "./components/modals/BulkRenameModal";
+import { AddImagesModal } from "./components/modals/AddImagesModal";
+import { GlobalSettingsModal } from "./components/modals/GlobalSettingsModal";
+import { ViewMode } from "./components/ui/ResultsHeader";
 import { ProcessedImage, ProcessingSettings } from "./types";
 import { applyPreset } from "./presets/compressionPresets";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import { notifications } from "@mantine/notifications";
+// Lazy-load JSZip to reduce initial bundle size
+const loadJSZip = () => import('jszip');
 import {
   loadSelectedPreset,
   loadProcessingSettings,
@@ -28,6 +33,10 @@ function App() {
   const [viewMode, setViewMode] = useState<ViewMode>(
     () => loadViewMode() || 'grid'
   );
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [addImagesModalOpen, setAddImagesModalOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [bulkRenameModalOpen, setBulkRenameModalOpen] = useState(false);
   const [processingSettings, setProcessingSettings] = useState<ProcessingSettings>(
     () => loadProcessingSettings() || DEFAULT_PROCESSING_SETTINGS
   );
@@ -37,7 +46,7 @@ function App() {
     setProcessedImages((prev) => [
       ...prev,
       ...newFiles.map((file) => ({
-        id: Math.random().toString(36),
+        id: crypto.randomUUID(),
         originalFile: file,
         originalSize: file.size,
         processedBlob: null,
@@ -68,10 +77,6 @@ function App() {
       setFiles([]);
       setProcessedImages([]);
     }
-  }, []);
-
-  const handleReorderImages = useCallback((reorderedImages: ProcessedImage[]) => {
-    setProcessedImages(reorderedImages);
   }, []);
 
   const handlePresetChange = useCallback((presetId: string) => {
@@ -137,12 +142,189 @@ function App() {
     );
   }, []);
 
-  const handleScrollToCustomize = useCallback(() => {
-    const settingsElement = document.getElementById('settings-section');
-    if (settingsElement) {
-      settingsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+  const handleCrop = useCallback((imageId: string, croppedBlob: Blob, croppedFileName: string) => {
+    setProcessedImages((prev) =>
+      prev.map((img) => {
+        if (img.id === imageId) {
+          // Store the current processed blob before applying crop
+          return {
+            ...img,
+            preCropBlob: img.processedBlob,
+            preCropSize: img.processedSize,
+            processedBlob: croppedBlob,
+            processedSize: croppedBlob.size,
+            wasCropped: true,
+            customFileName: croppedFileName.replace(/\.[^/.]+$/, ''), // Remove extension from filename
+          };
+        }
+        return img;
+      })
+    );
+
+    notifications.show({
+      title: 'Image Cropped',
+      message: 'Your image has been cropped successfully',
+      color: 'green',
+    });
   }, []);
+
+  const handleResetCrop = useCallback((imageId: string) => {
+    setProcessedImages((prev) =>
+      prev.map((img) => {
+        if (img.id === imageId && img.wasCropped && img.preCropBlob) {
+          // Restore the pre-crop blob
+          return {
+            ...img,
+            processedBlob: img.preCropBlob,
+            processedSize: img.preCropSize || 0,
+            wasCropped: false,
+            preCropBlob: null,
+            preCropSize: undefined,
+            // Remove the "_cropped" suffix from filename if present
+            customFileName: img.customFileName?.replace(/_cropped$/, ''),
+          };
+        }
+        return img;
+      })
+    );
+
+    notifications.show({
+      title: 'Crop Reset',
+      message: 'Image restored to pre-crop state',
+      color: 'blue',
+    });
+  }, []);
+
+  const handleDownloadAll = useCallback(async () => {
+    const processedImagesOnly = processedImages.filter(
+      (img) => img.processed && img.processedBlob
+    );
+
+    if (processedImagesOnly.length === 0) {
+      notifications.show({
+        title: 'No images ready',
+        message: 'Please wait for images to finish processing',
+        color: 'yellow',
+      });
+      return;
+    }
+
+    try {
+      // Lazy-load JSZip
+      const JSZipModule = await loadJSZip();
+      const JSZip = JSZipModule.default;
+      const zip = new JSZip();
+      const usedFilenames = new Set<string>();
+
+      // Helper function to get correct file extension based on output format
+      const getExtension = (outputFormat: string | undefined, originalName: string): string => {
+        if (outputFormat) {
+          // Map output format to extension
+          const formatMap: Record<string, string> = {
+            'jpeg': '.jpg',
+            'jpg': '.jpg',
+            'png': '.png',
+            'webp': '.webp',
+            'avif': '.avif',
+          };
+          return formatMap[outputFormat.toLowerCase()] || `.${outputFormat}`;
+        }
+
+        // Fallback to original extension
+        const lastDot = originalName.lastIndexOf('.');
+        return lastDot > 0 ? originalName.substring(lastDot) : '';
+      };
+
+      // Helper function to sanitize filename - removes path components and invalid characters
+      const sanitizeFilename = (filename: string): string => {
+        // Remove or replace path separators and traversal attempts
+        let sanitized = filename
+          .replace(/[\/\\]/g, '_')           // Replace path separators with underscore
+          .replace(/\.\./g, '_')             // Replace .. with underscore
+          .trim();                           // Remove leading/trailing whitespace
+
+        // Remove leading dots
+        sanitized = sanitized.replace(/^\.+/, '');
+
+        // Remove invalid filename characters (OS-specific but being conservative)
+        // Keep: alphanumeric, spaces, hyphens, underscores, parentheses, periods
+        sanitized = sanitized.replace(/[<>:"|?*\u0000-\u001F]/g, '_');
+
+        // Collapse multiple underscores/spaces
+        sanitized = sanitized.replace(/_{2,}/g, '_').replace(/\s{2,}/g, ' ');
+
+        // Final trim and fallback to safe default if empty
+        sanitized = sanitized.trim();
+        return sanitized || 'image';
+      };
+
+      // Helper function to generate unique filename (prevents silent overwrites)
+      const getUniqueFilename = (baseName: string, extension: string): string => {
+        let filename = `${baseName}${extension}`;
+        let counter = 1;
+
+        // If filename already used, append (1), (2), etc.
+        while (usedFilenames.has(filename)) {
+          filename = `${baseName} (${counter})${extension}`;
+          counter++;
+        }
+
+        usedFilenames.add(filename);
+        return filename;
+      };
+
+      processedImagesOnly.forEach((image) => {
+        if (image.processedBlob) {
+          const originalName = image.originalFile.name;
+
+          // Extract base name from original (without extension)
+          const lastDot = originalName.lastIndexOf('.');
+          const baseName = lastDot > 0 ? originalName.substring(0, lastDot) : originalName;
+
+          // Get correct extension based on output format (not original extension!)
+          const extension = getExtension(image.outputFormat, originalName);
+
+          // Get raw base filename (custom or compressed original)
+          let rawBaseFileName = image.customFileName || `compressed_${baseName}`;
+
+          // Strip any trailing extension that matches the output extension to prevent duplicates
+          // e.g., if customFileName is "holiday-01.jpg" and output is jpg, remove the .jpg
+          const extensionPattern = new RegExp(`\\${extension}$`, 'i');
+          rawBaseFileName = rawBaseFileName.replace(extensionPattern, '');
+
+          // Sanitize the base filename
+          const sanitizedBaseFileName = sanitizeFilename(rawBaseFileName);
+
+          // Generate unique filename to prevent overwrites
+          const uniqueFilename = getUniqueFilename(sanitizedBaseFileName, extension);
+
+          zip.file(uniqueFilename, image.processedBlob);
+        }
+      });
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `imgcrush_${Date.now()}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      notifications.show({
+        title: 'Download started',
+        message: `Downloading ${processedImagesOnly.length} compressed images`,
+        color: 'green',
+      });
+    } catch (error) {
+      notifications.show({
+        title: 'Download failed',
+        message: 'Failed to create ZIP file',
+        color: 'red',
+      });
+    }
+  }, [processedImages]);
 
   const handleUpdateImageSettings = useCallback((imageId: string, settings: ProcessingSettings) => {
     setProcessedImages((prev) =>
@@ -297,16 +479,60 @@ function App() {
   const hasImages = processedImages.length > 0;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--mantine-color-body)' }}>
-      {/* Product Tour - Enabled */}
-      <ProductTour hasImages={hasImages} />
+    <div className="min-h-screen bg-gradient-mesh-animated" style={{ display: 'flex' }}>
+      {/* Sidebar Navigation - Always visible */}
+      <Sidebar
+        onReset={handleClearAll}
+        hasImages={hasImages}
+        onCollapsedChange={setSidebarCollapsed}
+        onOpenSettings={() => setSettingsModalOpen(true)}
+        onOpenBulkRename={() => setBulkRenameModalOpen(true)}
+        onDownloadZip={handleDownloadAll}
+        images={processedImages}
+      />
 
-      <main className="flex-1">
+      {/* Modals */}
+      <AddImagesModal
+        opened={addImagesModalOpen}
+        onClose={() => setAddImagesModalOpen(false)}
+        onFilesSelected={handleFilesSelected}
+        selectedPreset={selectedPreset}
+        onPresetChange={handlePresetChange}
+        settings={processingSettings}
+        onSettingsChange={setProcessingSettings}
+      />
+
+      <GlobalSettingsModal
+        opened={settingsModalOpen}
+        onClose={() => setSettingsModalOpen(false)}
+        settings={processingSettings}
+        onSettingsChange={setProcessingSettings}
+        selectedPreset={selectedPreset}
+        onPresetChange={handlePresetChange}
+        onRegenerateAll={regenerateAllImages}
+      />
+
+      <BulkRenameModal
+        opened={bulkRenameModalOpen}
+        onClose={() => setBulkRenameModalOpen(false)}
+        images={processedImages.filter(img => img.processed)}
+        onApply={handleBulkRename}
+      />
+
+      {/* Main Content Area - Responsive to sidebar state */}
+      <main style={{
+        marginLeft: sidebarCollapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        transition: 'margin-left 0.3s ease'
+      }}>
         {!hasImages ? (
           <>
-            {/* Initial centered upload state */}
-            <div className="container mx-auto px-4">
-              <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] py-12">
+            {/* Initial centered upload state - Full width */}
+            <div className="container mx-auto px-8" style={{ maxWidth: '1400px', flex: 1 }}>
+              <div className="flex flex-col items-center justify-center" style={{ minHeight: 'calc(100vh - 120px)', paddingTop: '48px', paddingBottom: '48px' }}>
                 <ImageUpload
                   onFilesSelected={handleFilesSelected}
                   minimal={true}
@@ -319,48 +545,44 @@ function App() {
             </div>
           </>
         ) : (
-          // Processing view with images
-          <>
-            <ResultsHeader
-              onReset={handleClearAll}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-            />
-            <div className="container mx-auto px-4 py-8">
-              <div className="max-w-7xl mx-auto" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                <ImageProcessor
-                  images={processedImages}
-                  settings={processingSettings}
-                  onRemoveImage={handleRemoveFile}
-                  onUpdateImage={updateProcessedImage}
-                  onFilesSelected={handleFilesSelected}
-                  onCustomize={handleScrollToCustomize}
-                  onUpdateImageSettings={handleUpdateImageSettings}
-                  onApplyToAll={handleApplySettingsToAll}
-                  onClearAll={handleClearAll}
-                  onReorderImages={handleReorderImages}
-                  onUpdateFileName={handleUpdateFileName}
-                  onBulkRename={handleBulkRename}
-                  viewMode={viewMode}
-                />
+          // Processing view with images - With sidebar
+          <div className="container mx-auto px-8 py-8" style={{ maxWidth: '1600px', flex: 1 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Results Area Header */}
+              <ResultsAreaHeader
+                images={processedImages}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                onDownloadAll={handleDownloadAll}
+                onAddImages={() => setAddImagesModalOpen(true)}
+                selectedPreset={selectedPreset}
+                onOpenSettings={() => setSettingsModalOpen(true)}
+              />
 
-                <div id="settings-section" className="pt-8 border-t" style={{ borderColor: 'var(--color-border-primary)' }}>
-                  <ProcessingControls
-                    settings={processingSettings}
-                    onSettingsChange={setProcessingSettings}
-                    onClear={handleClearAll}
-                    selectedPreset={selectedPreset}
-                    onPresetChange={handlePresetChange}
-                    onRegenerateAll={regenerateAllImages}
-                  />
-                </div>
-              </div>
+              {/* Bulk Rename Callout Banner */}
+              <BulkRenameCallout
+                imageCount={processedImages.length}
+                onOpenRename={() => setBulkRenameModalOpen(true)}
+              />
+
+              <ImageProcessor
+                images={processedImages}
+                settings={processingSettings}
+                onRemoveImage={handleRemoveFile}
+                onUpdateImage={updateProcessedImage}
+                onUpdateImageSettings={handleUpdateImageSettings}
+                onApplyToAll={handleApplySettingsToAll}
+                onClearAll={handleClearAll}
+                onUpdateFileName={handleUpdateFileName}
+                onBulkRename={handleBulkRename}
+                onCrop={handleCrop}
+                onResetCrop={handleResetCrop}
+                viewMode={viewMode}
+              />
             </div>
-          </>
+          </div>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }

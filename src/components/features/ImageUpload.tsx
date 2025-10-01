@@ -7,6 +7,35 @@ import { getPresetById, applyPreset } from '../../presets/compressionPresets';
 import { convertHeicFiles } from '../../utils/heicConverter';
 import { notifications } from '@mantine/notifications';
 
+// Static styles extracted outside component to prevent re-creation on every render
+const DROPZONE_STYLES = {
+  borderRadius: '16px',
+  borderWidth: '3px',
+};
+
+const UPLOAD_ICON_STYLES = (isDragging: boolean) => ({
+  color: isDragging ? 'var(--color-primary)' : 'var(--color-text-tertiary)',
+  transform: isDragging ? 'scale(1.1)' : 'scale(1)',
+});
+
+const COMPACT_DROPZONE_STYLES = {
+  borderRadius: '12px',
+};
+
+const FILE_IMAGE_STYLES = (isDragging: boolean) => ({
+  color: isDragging ? 'var(--color-primary)' : 'var(--color-text-muted)',
+  transform: isDragging ? 'scale(1.1)' : 'scale(1)',
+});
+
+const ADD_FILES_BTN_STYLES = {
+  borderRadius: '8px',
+};
+
+const PASTE_BTN_STYLES = {
+  borderWidth: '1px',
+  borderRadius: '8px',
+};
+
 interface ImageUploadProps {
   onFilesSelected: (files: File[]) => void;
   minimal?: boolean;
@@ -41,6 +70,22 @@ export function ImageUpload({
   // Wrapper to handle HEIC conversion before passing files
   const processAndSelectFiles = useCallback(
     async (files: File[]) => {
+      // Validation constants
+      const MAX_FILE_SIZE = 75 * 1024 * 1024; // 75MB per file
+      const MAX_TOTAL_SIZE = 500 * 1024 * 1024; // 500MB total
+      const MAX_FILE_COUNT = 100; // Maximum 100 files
+      const MAX_FILENAME_LENGTH = 255;
+
+      // File count validation
+      if (files.length > MAX_FILE_COUNT) {
+        notifications.show({
+          title: 'Too many files',
+          message: `Maximum ${MAX_FILE_COUNT} files allowed. Please select fewer files.`,
+          color: 'red',
+        });
+        return;
+      }
+
       // Filter for image files (including HEIC)
       const imageFiles = files.filter((file) =>
         file.type.startsWith("image/") ||
@@ -49,6 +94,59 @@ export function ImageUpload({
       );
 
       if (imageFiles.length === 0) {
+        notifications.show({
+          title: 'No valid images',
+          message: 'Please select valid image files (JPG, PNG, WebP, HEIC, AVIF, etc.)',
+          color: 'yellow',
+        });
+        return;
+      }
+
+      // Validate individual file sizes and filenames
+      const invalidFiles = [];
+      const invalidFilenames = [];
+      let totalSize = 0;
+
+      for (const file of imageFiles) {
+        // File size validation
+        if (file.size > MAX_FILE_SIZE) {
+          invalidFiles.push(`${file.name} (${Math.round(file.size / 1024 / 1024)}MB)`);
+        }
+
+        // Filename length validation
+        if (file.name.length > MAX_FILENAME_LENGTH) {
+          invalidFilenames.push(file.name.substring(0, 50) + '...');
+        }
+
+        totalSize += file.size;
+      }
+
+      // Show errors for invalid files
+      if (invalidFiles.length > 0) {
+        notifications.show({
+          title: 'Files too large',
+          message: `Maximum 75MB per file. Invalid: ${invalidFiles.join(', ')}`,
+          color: 'red',
+        });
+        return;
+      }
+
+      if (invalidFilenames.length > 0) {
+        notifications.show({
+          title: 'Filenames too long',
+          message: `Maximum 255 characters per filename. Please rename: ${invalidFilenames.join(', ')}`,
+          color: 'red',
+        });
+        return;
+      }
+
+      // Total size validation
+      if (totalSize > MAX_TOTAL_SIZE) {
+        notifications.show({
+          title: 'Total size too large',
+          message: `Maximum 500MB total. Current: ${Math.round(totalSize / 1024 / 1024)}MB. Please select fewer files.`,
+          color: 'red',
+        });
         return;
       }
 
@@ -176,25 +274,27 @@ export function ImageUpload({
 
   if (minimal) {
     return (
-      <div className="w-full max-w-3xl mx-auto">
-        <Stack gap="lg">
+      <div className="w-full max-w-4xl mx-auto animate-fade-in">
+        <Stack gap="xl">
           {/* Logo */}
-          <div className="text-center">
+          <div className="text-center animate-scale-in">
             <img
               src={isDark ? '/logo-darkmode.svg' : '/logo.svg'}
               alt="ImgCrush"
-              style={{ height: '80px', margin: '0 auto' }}
+              style={{ height: '68px', margin: '0 auto' }}
             />
           </div>
 
-          {/* Drop Zone */}
+          {/* Drop Zone - Enhanced */}
           <label
             htmlFor="file-input"
-            className="block border-2 border-dashed p-12 transition-all duration-200 cursor-pointer"
+            className={`block border-2 border-dashed p-16 transition-all duration-300 cursor-pointer elevation-lg hover-lift ${
+              isDragging ? 'animate-pulse-glow' : ''
+            }`}
             style={{
+              ...DROPZONE_STYLES,
               borderColor: isDragging ? 'var(--color-dropzone-active-border)' : 'var(--color-dropzone-border)',
               backgroundColor: isDragging ? 'var(--color-dropzone-active-bg)' : 'var(--color-dropzone-bg)',
-              borderRadius: '8px',
             }}
             onDragOver={(e) => {
               e.preventDefault();
@@ -212,15 +312,23 @@ export function ImageUpload({
               id="file-input"
             />
 
-            <Upload className="w-10 h-10 text-muted mx-auto mb-3" />
-            <p className="text-primary text-center mb-1">Drop images here or click to browse</p>
-            <p className="text-tertiary text-sm text-center">
+            <Upload
+              className="w-14 h-14 mx-auto mb-4 transition-transform duration-300"
+              style={UPLOAD_ICON_STYLES(isDragging)}
+            />
+            <p
+              className="text-center mb-2 font-semibold text-xl"
+              style={{ color: 'var(--color-text-primary)' }}
+            >
+              Drop images here or click to browse
+            </p>
+            <p className="text-center text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
               JPG, PNG, WebP, HEIC, AVIF • Multiple files • Ctrl+V to paste
             </p>
           </label>
 
-          {/* Preset Selector */}
-          <Paper p="lg" radius="md" withBorder style={{ borderColor: 'var(--color-border-primary)' }}>
+          {/* Preset Selector - Glassmorphic */}
+          <div className="glass-strong elevation-md" style={{ padding: '24px', borderRadius: '16px' }}>
             <PresetSelector
               selectedPreset={selectedPreset}
               onPresetChange={(presetId) => {
@@ -237,26 +345,33 @@ export function ImageUpload({
                 }
               }}
             />
-          </Paper>
+          </div>
 
-          <div className="flex items-center justify-center gap-8 text-xs text-tertiary">
-            <div className="flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>100% Private</span>
+          {/* Feature Badges - Enhanced */}
+          <div className="flex items-center justify-center gap-10 text-sm" style={{ color: 'var(--color-text-tertiary)' }}>
+            <div className="flex items-center gap-2 animate-fade-in animate-delay-100">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-success)', opacity: 0.2 }}>
+                <svg className="w-4 h-4" style={{ color: 'var(--color-success)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <span className="font-medium">100% Private</span>
             </div>
-            <div className="flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span>Instant Processing</span>
+            <div className="flex items-center gap-2 animate-fade-in animate-delay-200">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-warning)', opacity: 0.2 }}>
+                <svg className="w-4 h-4" style={{ color: 'var(--color-warning)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <span className="font-medium">Instant Processing</span>
             </div>
-            <div className="flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <span>No Upload</span>
+            <div className="flex items-center gap-2 animate-fade-in animate-delay-300">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-primary)', opacity: 0.2 }}>
+                <svg className="w-4 h-4" style={{ color: 'var(--color-primary)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <span className="font-medium">No Upload</span>
             </div>
           </div>
         </Stack>
@@ -264,15 +379,15 @@ export function ImageUpload({
     );
   }
 
-  // Original non-minimal version for when images are loaded
+  // Compact version for results page
   return (
-    <div className="bg-elevated border border-primary p-4 h-full flex flex-col" style={{ borderRadius: '8px', borderWidth: '1px', borderColor: 'var(--color-border-primary)' }}>
+    <div className="glass elevation-md hover-lift p-4 h-full flex flex-col transition-smooth" style={{ borderRadius: '12px' }}>
       <div
-        className="border-2 border-dashed p-6 text-center transition-all duration-200 flex-1 flex flex-col items-center justify-center"
+        className="border-2 border-dashed p-8 text-center transition-all duration-300 flex-1 flex flex-col items-center justify-center"
         style={{
+          ...COMPACT_DROPZONE_STYLES,
           borderColor: isDragging ? 'var(--color-dropzone-active-border)' : 'var(--color-dropzone-border)',
           backgroundColor: isDragging ? 'var(--color-dropzone-active-bg)' : 'var(--color-dropzone-bg)',
-          borderRadius: '8px',
         }}
         onDragOver={(e) => {
           e.preventDefault();
@@ -281,8 +396,13 @@ export function ImageUpload({
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
       >
-        <FileImage className="w-8 h-8 text-muted mx-auto mb-2" />
-        <p className="text-primary mb-1">Drop more images here</p>
+        <FileImage
+          className="w-10 h-10 mx-auto mb-3 transition-transform duration-300"
+          style={FILE_IMAGE_STYLES(isDragging)}
+        />
+        <p className="mb-1 font-medium" style={{ color: 'var(--color-text-primary)' }}>
+          Drop more images here
+        </p>
 
         <input
           type="file"
@@ -293,10 +413,11 @@ export function ImageUpload({
           id="file-input-compact"
         />
 
-        <div className="flex gap-2 justify-center mt-3">
+        <div className="flex gap-2 justify-center mt-4">
           <label
             htmlFor="file-input-compact"
-            className="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors cursor-pointer"
+            className="inline-flex items-center px-5 py-2.5 text-white text-sm font-semibold transition-all duration-200 cursor-pointer elevation-sm hover:elevation-md btn-primary-hover"
+            style={ADD_FILES_BTN_STYLES}
           >
             Add Files
           </label>
@@ -304,12 +425,13 @@ export function ImageUpload({
           {clipboardSupported && (
             <button
               onClick={handlePasteFromClipboard}
-              className="inline-flex items-center px-4 py-2 bg-elevated border border-primary text-primary text-sm font-medium rounded-md transition-colors"
+              className="inline-flex items-center px-4 py-2.5 text-sm font-medium transition-all duration-200 elevation-sm hover:elevation-md btn-elevated-hover"
               style={{
+                ...PASTE_BTN_STYLES,
                 backgroundColor: 'var(--color-bg-elevated)',
+                borderColor: 'var(--color-border-primary)',
+                color: 'var(--color-text-primary)',
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--color-hover-bg)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--color-bg-elevated)'}
             >
               <Clipboard className="w-4 h-4" />
             </button>

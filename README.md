@@ -48,13 +48,14 @@ Perfect for web developers, designers, content creators, and anyone who needs to
 - 🎯 **Drag to Reorder** - Reorder images by dragging the grip handle
 - 📋 **Clipboard Paste** - Paste images directly from clipboard (Ctrl/Cmd + V)
 - ✏️ **Inline Filename Editing** - Rename files before download with click-to-edit
+- 📝 **Bulk Rename** - Rename all files at once with multiple naming patterns
 - 🎛️ **Advanced Controls** - Fine-tune quality, dimensions, and format per image
-- 📊 **Detailed Stats** - See file size savings and dimension changes
+- 📊 **Detailed Stats** - See file size savings and dimension changes in sidebar
 - ⚡ **Live Regeneration** - Adjust settings and regenerate on the fly
+- 👁️ **View Modes** - Switch between grid and table views for different workflows
 - ⌨️ **Keyboard Shortcuts** - Ctrl+V paste, Ctrl+S save, Space toggle comparison
 - 🌓 **Dark Mode** - Beautiful dark theme with seamless toggle
 - 💾 **Settings Persistence** - Your preferences saved in localStorage
-- 🎓 **Product Tour** - Interactive guide for first-time users
 
 ## 🚀 Quick Start
 
@@ -173,21 +174,32 @@ imgcrush/
 ├── src/
 │   ├── components/              # React components
 │   │   ├── ui/                  # UI components
-│   │   │   ├── Header.tsx
-│   │   │   ├── Footer.tsx
-│   │   │   ├── ResultsHeader.tsx
-│   │   │   └── ProductTour.tsx  # Interactive tour
+│   │   │   ├── Sidebar.tsx      # Main navigation sidebar with dark mode toggle
+│   │   │   ├── ResultsAreaHeader.tsx # Results area header with view switcher
+│   │   │   ├── BulkRenameCallout.tsx # Bulk rename prompt banner
+│   │   │   └── Header.tsx       # Legacy header component
 │   │   ├── features/            # Feature components
 │   │   │   ├── ImageUpload.tsx  # Drag & drop upload with HEIC support
 │   │   │   ├── ImageCard.tsx    # Image display with inline editing
+│   │   │   ├── ImageTableView.tsx # Table view for images
 │   │   │   ├── ImageProcessor.tsx # Processing orchestration with drag-to-reorder
-│   │   │   ├── ProcessingControls.tsx # Settings panel
+│   │   │   ├── ImageSettingsModal.tsx # Per-image settings editor
+│   │   │   ├── BulkRenameModal.tsx # Bulk rename with naming patterns
 │   │   │   ├── DownloadAll.tsx  # Batch ZIP download
 │   │   │   ├── PresetSelector.tsx # Compression presets
-│   │   │   ├── ImageSettingsModal.tsx # Per-image settings
 │   │   │   └── CropModal.tsx    # Crop tool (in progress)
+│   │   ├── modals/              # Modal dialogs
+│   │   │   ├── GlobalSettingsModal.tsx # Global settings editor
+│   │   │   └── AddImagesModal.tsx # Add more images modal
 │   │   └── comparison/          # Comparison tools
 │   │       └── ImageComparison.tsx # Before/after slider
+│   ├── processing/              # Processing pipeline
+│   │   ├── ProcessingPipeline.ts # Main pipeline orchestrator
+│   │   ├── types.ts             # Processing-specific types
+│   │   └── processors/          # Individual processors
+│   │       ├── ResizeProcessor.ts
+│   │       ├── QualityProcessor.ts
+│   │       └── FormatProcessor.ts
 │   ├── hooks/                   # React hooks
 │   │   └── useKeyboardShortcuts.tsx # Keyboard shortcuts
 │   ├── presets/                 # Compression presets
@@ -197,11 +209,14 @@ imgcrush/
 │   │   ├── fileUtils.ts         # File utilities
 │   │   ├── heicConverter.ts     # HEIC to JPEG conversion
 │   │   ├── exifHandler.ts       # EXIF metadata handling
-│   │   └── settingsStorage.ts   # localStorage persistence
+│   │   ├── settingsStorage.ts   # localStorage persistence
+│   │   └── namingFormats.ts     # Bulk rename naming patterns
 │   ├── types/                   # TypeScript definitions
-│   │   └── index.ts
+│   │   ├── index.ts             # Global type definitions
+│   │   └── piexifjs.d.ts        # piexifjs type definitions
 │   ├── App.tsx                  # Root component
 │   ├── main.tsx                 # Entry point
+│   ├── ErrorBoundary.tsx        # Error boundary component
 │   └── index.css                # Global styles with Tailwind v4 & CSS variables
 ├── docs/                        # Documentation
 │   ├── DEVELOPER_GUIDE.md       # Developer guide
@@ -235,8 +250,10 @@ imgcrush/
 - [x] Keyboard shortcuts (Ctrl+V, Ctrl+S, Space)
 - [x] Drag-to-reorder images with grip handle
 - [x] Inline filename editing with click-to-edit
-- [x] Product tour for first-time users
+- [x] Bulk rename with multiple naming formats
 - [x] Per-image settings with "Apply to All" option
+- [x] Grid and table view modes
+- [x] Sidebar navigation with compression stats
 - [x] React 19 and Tailwind CSS v4 upgrade
 
 ### In Progress 🚧

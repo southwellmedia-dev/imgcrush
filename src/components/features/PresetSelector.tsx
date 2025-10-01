@@ -46,7 +46,7 @@ export function PresetSelector({ selectedPreset, onPresetChange }: PresetSelecto
                     Selected
                   </Badge>
                 ) : preset.badge ? (
-                  <Badge size="xs" color="red" variant="light">
+                  <Badge size="xs" className="badge-primary-subtle">
                     {preset.badge}
                   </Badge>
                 ) : null}
@@ -58,12 +58,16 @@ export function PresetSelector({ selectedPreset, onPresetChange }: PresetSelecto
               </Text>
 
               {preset.recommended && preset.recommended.length > 0 && (
-                <Group gap={4}>
-                  <Text size="xs" c="dimmed">Best for:</Text>
-                  <Text size="xs" c="gray.7">
-                    {preset.recommended.slice(0, 2).join(', ')}
-                  </Text>
-                </Group>
+                <div>
+                  <Text size="xs" c="dimmed" mb={6}>Best for:</Text>
+                  <Group gap={6}>
+                    {preset.recommended.slice(0, 2).map((item, index) => (
+                      <Badge key={index} size="sm" variant="light" className="badge-gray-subtle">
+                        {item}
+                      </Badge>
+                    ))}
+                  </Group>
+                </div>
               )}
             </Stack>
           </Card>

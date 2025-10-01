@@ -1,130 +1,101 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Download, X, Loader, Check, ArrowRight, Maximize2, FileType, Percent, AlertTriangle, RefreshCw, Eye, Settings2, Crop, Edit2, Save, XCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, X, Loader, Check, ArrowRight, Maximize2, FileType, Percent, AlertTriangle, RefreshCw, Eye, Settings2, Crop, Edit2, Save, XCircle, RotateCcw } from 'lucide-react';
 import { Card, Image as MantineImage, Text, Button, Group, Stack, Badge, Paper, Progress, Tooltip, ActionIcon, Alert, Modal, TextInput } from '@mantine/core';
+import { motion } from 'framer-motion';
 import { ProcessedImage, ProcessingSettings } from '../../types';
 import { formatFileSize } from '../../utils/fileUtils';
 import { ImageComparison } from '../comparison/ImageComparison';
-import { ImageSettingsModal } from './ImageSettingsModal';
-import { CropModal } from './CropModal';
+import { ImageSettingsModal } from '../modals/ImageSettingsModal';
+import { CropModal } from '../modals/CropModal';
+import { useImageBlobUrls } from '../../hooks/useImageBlobUrls';
+import { useFilenameEditor } from '../../hooks/useFilenameEditor';
+
+// Static styles extracted outside component to prevent re-creation on every render
+const CARD_STYLES = {
+  borderWidth: '1px',
+  borderColor: 'var(--color-border-glass)',
+};
+
+const IMAGE_CONTAINER_STYLES = {
+  position: 'relative' as const,
+  backgroundColor: 'var(--color-bg-secondary)',
+  height: 300,
+  overflow: 'hidden' as const,
+};
+
+const PROCESSING_CONTAINER_STYLES = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  height: '100%',
+  backgroundColor: 'var(--color-bg-tertiary)',
+};
+
+const LOADER_STYLES = { color: 'var(--color-primary)' };
+const TEXT_SECONDARY_STYLES = { color: 'var(--color-text-secondary)' };
+
+const REMOVE_BTN_STYLES = {
+  position: 'absolute' as const,
+  top: 12,
+  right: 12,
+  borderRadius: '10px',
+};
+
+const ACTION_BTN_STYLES = {
+  borderRadius: '10px',
+  height: '44px',
+};
+
+const ACTION_BTN_ACTIVE_STYLE = {
+  ...ACTION_BTN_STYLES,
+  backgroundColor: 'var(--color-primary-light)',
+};
+
+const ACTION_BTN_INACTIVE_STYLE = {
+  ...ACTION_BTN_STYLES,
+  backgroundColor: 'var(--color-bg-elevated)',
+};
+
+const COMPARISON_MODAL_STYLES = {
+  header: {
+    backgroundColor: 'var(--color-bg-elevated)',
+    borderBottom: '1px solid var(--color-border-primary)',
+  },
+  body: {
+    backgroundColor: 'var(--color-bg-elevated)',
+    padding: '24px',
+  },
+};
 
 interface ImageCardProps {
   image: ProcessedImage;
   onRemove: () => void;
   onRegenerate?: () => void;
   onCrop?: (croppedBlob: Blob, croppedFileName: string) => void;
+  onResetCrop?: () => void;
   globalSettings: ProcessingSettings;
   onUpdateSettings?: (imageId: string, settings: ProcessingSettings) => void;
   onApplyToAll?: (settings: ProcessingSettings) => void;
   onUpdateFileName?: (imageId: string, fileName: string) => void;
 }
 
-export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSettings, onUpdateSettings, onApplyToAll, onUpdateFileName }: ImageCardProps) {
-  const [originalUrl, setOriginalUrl] = useState<string | null>(null);
-  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
-  const [originalDimensions, setOriginalDimensions] = useState<{ width: number; height: number } | null>(null);
-  const [processedDimensions, setProcessedDimensions] = useState<{ width: number; height: number } | null>(null);
+export function ImageCard({ image, onRemove, onRegenerate, onCrop, onResetCrop, globalSettings, onUpdateSettings, onApplyToAll, onUpdateFileName }: ImageCardProps) {
+  // Modal state
   const [showComparison, setShowComparison] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCrop, setShowCrop] = useState(false);
 
-  // Filename editing state
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editedFileName, setEditedFileName] = useState('');
+  // Custom hooks for blob URL and filename management
+  const { originalUrl, processedUrl, originalDimensions, processedDimensions } = useImageBlobUrls(
+    image.originalFile,
+    image.processedBlob
+  );
 
-  // Use refs to track blob URLs and prevent double-revocation in StrictMode
-  const originalUrlRef = useRef<string | null>(null);
-  const processedUrlRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    // Validate the file before creating blob URL
-    if (!image.originalFile || !(image.originalFile instanceof Blob)) {
-      console.error('Invalid originalFile:', image.originalFile);
-      return;
+  const filenameEditor = useFilenameEditor((newName) => {
+    if (onUpdateFileName) {
+      onUpdateFileName(image.id, newName);
     }
-
-    // Revoke old URL if it exists (only when dependency changes)
-    if (originalUrlRef.current) {
-      URL.revokeObjectURL(originalUrlRef.current);
-    }
-
-    const url = URL.createObjectURL(image.originalFile);
-    originalUrlRef.current = url;
-    setOriginalUrl(url);
-
-    // Get original image dimensions
-    const img = new Image();
-    img.onload = () => {
-      setOriginalDimensions({ width: img.width, height: img.height });
-    };
-    img.onerror = (e) => {
-      console.error('Failed to load original image dimensions:', {
-        url,
-        fileName: image.originalFile.name,
-        fileSize: image.originalFile.size,
-        fileType: image.originalFile.type,
-        error: e
-      });
-    };
-    img.src = url;
-
-    // Don't revoke in cleanup - let it persist for StrictMode compatibility
-  }, [image.originalFile]);
-
-  useEffect(() => {
-    if (image.processedBlob) {
-      // Validate the blob before creating URL
-      if (!(image.processedBlob instanceof Blob)) {
-        console.error('Invalid processedBlob:', image.processedBlob);
-        return;
-      }
-
-      // Revoke old URL if it exists (only when dependency changes)
-      if (processedUrlRef.current) {
-        URL.revokeObjectURL(processedUrlRef.current);
-      }
-
-      const url = URL.createObjectURL(image.processedBlob);
-      processedUrlRef.current = url;
-      setProcessedUrl(url);
-
-      // Get processed image dimensions
-      const img = new Image();
-      img.onload = () => {
-        setProcessedDimensions({ width: img.width, height: img.height });
-      };
-      img.onerror = (e) => {
-        console.error('Failed to load processed image dimensions:', {
-          url,
-          blobSize: image.processedBlob.size,
-          blobType: image.processedBlob.type,
-          error: e
-        });
-      };
-      img.src = url;
-
-      // Don't revoke in cleanup - let it persist for StrictMode compatibility
-    } else {
-      // Clean up when processedBlob becomes null (reprocessing, reset, etc.)
-      if (processedUrlRef.current) {
-        URL.revokeObjectURL(processedUrlRef.current);
-        processedUrlRef.current = null;
-      }
-      setProcessedUrl(null);
-      setProcessedDimensions(null);
-    }
-  }, [image.processedBlob]);
-
-  // Cleanup blob URLs only on component unmount
-  useEffect(() => {
-    return () => {
-      if (originalUrlRef.current) {
-        URL.revokeObjectURL(originalUrlRef.current);
-      }
-      if (processedUrlRef.current) {
-        URL.revokeObjectURL(processedUrlRef.current);
-      }
-    };
-  }, []); // Empty deps = only runs cleanup on unmount
+  });
 
   const handleDownload = () => {
     if (image.processedBlob) {
@@ -161,23 +132,9 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
   };
 
   const handleEditFileName = () => {
-    // Get filename without extension
     const originalName = image.originalFile.name;
     const { base } = splitFileName(originalName);
-    setEditedFileName(image.customFileName || base);
-    setIsEditingName(true);
-  };
-
-  const handleSaveFileName = () => {
-    if (onUpdateFileName && editedFileName.trim()) {
-      onUpdateFileName(image.id, editedFileName.trim());
-    }
-    setIsEditingName(false);
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditingName(false);
-    setEditedFileName('');
+    filenameEditor.startEditing(image.customFileName || base);
   };
 
   const handleCropComplete = (croppedBlob: Blob, croppedFileName: string) => {
@@ -200,14 +157,39 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
      originalDimensions.height !== processedDimensions.height);
 
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder style={{ borderWidth: '2px', borderColor: 'var(--color-border-primary)' }} data-tour="image-card">
+    <motion.div
+      whileHover={{ y: -4, scale: 1.01 }}
+      transition={{ duration: 0.2, ease: 'easeOut' }}
+    >
+      <Card
+        shadow="none"
+        padding="0"
+        radius="lg"
+        className="glass elevation-xl transition-smooth animate-scale-in overflow-hidden"
+        style={CARD_STYLES}
+      >
+      {/* Colored Top Accent Bar - Status Indicator */}
+      {image.processed && (
+        <div
+          style={{
+            height: '4px',
+            background: fileSizeIncreased
+              ? 'linear-gradient(90deg, var(--color-error) 0%, var(--color-warning) 100%)'
+              : 'linear-gradient(90deg, var(--color-success) 0%, var(--color-info) 100%)',
+            boxShadow: fileSizeIncreased ? 'var(--shadow-glow-red)' : 'var(--shadow-glow-green)',
+          }}
+        />
+      )}
+
       <Card.Section>
-        <div style={{ position: 'relative', backgroundColor: 'var(--color-bg-secondary)', height: 250, overflow: 'hidden' }}>
+        <div style={IMAGE_CONTAINER_STYLES}>
           {image.processing ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-              <Stack align="center" gap="sm">
-                <Loader size={32} className="animate-spin" />
-                <Text size="sm" c="dimmed">Processing...</Text>
+            <div className="shimmer" style={PROCESSING_CONTAINER_STYLES}>
+              <Stack align="center" gap="md">
+                <Loader size={40} style={LOADER_STYLES} />
+                <Text size="sm" fw={500} style={TEXT_SECONDARY_STYLES}>
+                  Processing...
+                </Text>
               </Stack>
             </div>
           ) : processedUrl ? (
@@ -222,48 +204,82 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
               src={originalUrl}
               alt="Original"
               fit="cover"
-              style={{ opacity: 0.5, height: '100%', width: '100%' }}
+              style={{ opacity: 0.4, height: '100%', width: '100%', filter: 'grayscale(50%)' }}
             />
           ) : null}
 
-          {/* Status badge */}
+          {/* Status Badge - Larger and more prominent */}
           {image.processed && (
             <Badge
-              color={fileSizeIncreased ? "red" : "green"}
+              size="lg"
               variant="filled"
-              style={{ position: 'absolute', top: 8, left: 8 }}
-              leftSection={fileSizeIncreased ? <AlertTriangle size={14} /> : <Check size={14} />}
+              radius="md"
+              className="elevation-lg animate-count-up"
+              style={{
+                position: 'absolute',
+                top: 12,
+                left: 12,
+                fontSize: '14px',
+                fontWeight: 700,
+                padding: '6px 12px',
+                backgroundColor: fileSizeIncreased ? 'var(--color-error)' : 'var(--color-success)',
+                border: '2px solid rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+              }}
+              leftSection={fileSizeIncreased ? <AlertTriangle size={16} /> : <Check size={16} />}
             >
               {fileSizeIncreased ? '+' : '-'}{Math.abs(compressionRatio).toFixed(0)}%
             </Badge>
           )}
 
-          {/* Remove button */}
+          {/* Reset Crop button - Show when image has been cropped */}
+          {image.wasCropped && onResetCrop && (
+            <Tooltip label="Reset crop" position="left">
+              <ActionIcon
+                variant="filled"
+                size="lg"
+                className="elevation-md"
+                style={{
+                  position: 'absolute' as const,
+                  top: 12,
+                  right: 60,
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--color-info)',
+                }}
+                onClick={onResetCrop}
+              >
+                <RotateCcw size={18} style={{ color: 'white' }} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+
+          {/* Remove button - Enhanced */}
           <ActionIcon
             variant="filled"
-            color="gray"
-            size="sm"
-            style={{ position: 'absolute', top: 8, right: 8 }}
+            size="lg"
+            className="elevation-md remove-btn-hover"
+            style={REMOVE_BTN_STYLES}
             onClick={onRemove}
           >
-            <X size={16} />
+            <X size={18} style={{ color: 'white' }} />
           </ActionIcon>
         </div>
       </Card.Section>
 
-      <Stack gap="md" mt="md">
+      <Stack gap="lg" style={{ padding: '20px' }}>
         {/* Filename with inline editing */}
-        {isEditingName ? (
+        {filenameEditor.isEditing ? (
           <Group gap="xs" align="center">
             <TextInput
-              value={editedFileName}
-              onChange={(e) => setEditedFileName(e.target.value)}
+              value={filenameEditor.editedName}
+              onChange={(e) => filenameEditor.updateName(e.target.value)}
               size="sm"
               style={{ flex: 1 }}
               placeholder="Enter filename"
               onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveFileName();
-                if (e.key === 'Escape') handleCancelEdit();
+                if (e.key === 'Enter') filenameEditor.saveName();
+                if (e.key === 'Escape') filenameEditor.cancelEditing();
               }}
               autoFocus
             />
@@ -271,7 +287,7 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
               variant="filled"
               color="green"
               size="sm"
-              onClick={handleSaveFileName}
+              onClick={filenameEditor.saveName}
             >
               <Save size={14} />
             </ActionIcon>
@@ -279,18 +295,36 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
               variant="filled"
               color="gray"
               size="sm"
-              onClick={handleCancelEdit}
+              onClick={filenameEditor.cancelEditing}
             >
               <XCircle size={14} />
             </ActionIcon>
           </Group>
         ) : (
           <Group gap="xs" align="center" wrap="nowrap">
-            <Text size="sm" fw={500} style={{ wordBreak: 'break-word', flex: 1 }}>
-              {image.customFileName
-                ? image.customFileName
-                : splitFileName(image.originalFile.name).base}
-            </Text>
+            <Tooltip
+              label={image.customFileName || splitFileName(image.originalFile.name).base}
+              withArrow
+              position="top"
+              openDelay={500}
+              style={{ maxWidth: '100%' }}
+            >
+              <Text
+                size="sm"
+                fw={500}
+                style={{
+                  flex: 1,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  cursor: 'default'
+                }}
+              >
+                {image.customFileName
+                  ? image.customFileName
+                  : splitFileName(image.originalFile.name).base}
+              </Text>
+            </Tooltip>
             {image.outputFormat && (
               <Tooltip
                 label={
@@ -329,20 +363,36 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
           </Alert>
         )}
 
-        {/* Optimization Details */}
+        {/* Optimization Details - Enhanced */}
         {image.processed && (
-          <Paper p="md" radius="md" withBorder style={{ backgroundColor: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-primary)' }}>
-            <Stack gap="sm">
-              {/* File Size */}
+          <div
+            className="glass-strong elevation-sm"
+            style={{
+              padding: '16px',
+              borderRadius: '12px',
+              border: '1px solid var(--color-border-glass)',
+            }}
+          >
+            <Stack gap="md">
+              {/* File Size - Larger text */}
               <Group justify="space-between">
-                <Group gap={4}>
-                  <FileType size={14} />
-                  <Text size="xs" c="dimmed">File Size</Text>
+                <Group gap={6}>
+                  <FileType size={16} style={{ color: 'var(--color-text-tertiary)' }} />
+                  <Text size="sm" style={{ color: 'var(--color-text-secondary)' }}>File Size</Text>
                 </Group>
-                <Group gap="xs">
-                  <Text size="xs">{formatFileSize(image.originalSize)}</Text>
-                  <ArrowRight size={12} />
-                  <Text size="xs" fw={600} c={fileSizeIncreased ? "red" : "green"}>
+                <Group gap="sm">
+                  <Text size="sm" style={{ color: 'var(--color-text-tertiary)' }}>
+                    {formatFileSize(image.originalSize)}
+                  </Text>
+                  <ArrowRight size={14} style={{ color: 'var(--color-text-muted)' }} />
+                  <Text
+                    size="sm"
+                    fw={700}
+                    className="animate-count-up"
+                    style={{
+                      color: fileSizeIncreased ? 'var(--color-error)' : 'var(--color-success)',
+                    }}
+                  >
                     {formatFileSize(image.processedSize)}
                   </Text>
                 </Group>
@@ -351,9 +401,9 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
               {/* Dimensions - Always show when available */}
               {originalDimensions && processedDimensions && (
                 <Group justify="space-between">
-                  <Group gap={4}>
-                    <Maximize2 size={14} />
-                    <Text size="xs" c="dimmed">Dimensions</Text>
+                  <Group gap={6}>
+                    <Maximize2 size={16} style={{ color: 'var(--color-text-tertiary)' }} />
+                    <Text size="sm" style={{ color: 'var(--color-text-secondary)' }}>Dimensions</Text>
                   </Group>
                   {dimensionsChanged ? (
                     <Tooltip
@@ -362,16 +412,24 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
                       position="top"
                     >
                       <Group gap="xs" style={{ cursor: 'help' }}>
-                        <Text size="xs" fw={600}>
+                        <Text size="sm" fw={600} style={{ color: 'var(--color-text-primary)' }}>
                           {processedDimensions.width}×{processedDimensions.height}
                         </Text>
-                        <Badge size="xs" color="blue" variant="light">
+                        <Badge
+                          size="sm"
+                          style={{
+                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                            color: 'var(--color-info)',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            fontWeight: 600,
+                          }}
+                        >
                           {Math.round((processedDimensions.width / originalDimensions.width) * 100)}%
                         </Badge>
                       </Group>
                     </Tooltip>
                   ) : (
-                    <Text size="xs" fw={600}>
+                    <Text size="sm" fw={600} style={{ color: 'var(--color-text-primary)' }}>
                       {processedDimensions.width}×{processedDimensions.height}
                     </Text>
                   )}
@@ -380,94 +438,116 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
 
               {/* Compression */}
               <Group justify="space-between">
-                <Group gap={4}>
-                  <Percent size={14} />
-                  <Text size="xs" c="dimmed">{fileSizeIncreased ? 'Size Change' : 'Compression'}</Text>
+                <Group gap={6}>
+                  <Percent size={16} style={{ color: 'var(--color-text-tertiary)' }} />
+                  <Text size="sm" style={{ color: 'var(--color-text-secondary)' }}>
+                    {fileSizeIncreased ? 'Size Change' : 'Compression'}
+                  </Text>
                 </Group>
-                <Text size="xs" fw={600} c={fileSizeIncreased ? "red" : "green"}>
+                <Text
+                  size="sm"
+                  fw={700}
+                  className="animate-count-up"
+                  style={{
+                    color: fileSizeIncreased ? 'var(--color-error)' : 'var(--color-success)',
+                  }}
+                >
                   {fileSizeIncreased ? 'Increased ' : ''}{Math.abs(compressionRatio).toFixed(1)}%
                 </Text>
               </Group>
 
-              {/* Progress bar - only show for successful compression */}
+              {/* Progress bar - enhanced */}
               {!fileSizeIncreased && (
                 <Progress
                   value={compressionRatio}
-                  color="green"
-                  size="xs"
+                  size="sm"
                   radius="xl"
+                  style={{
+                    backgroundColor: 'var(--color-bg-tertiary)',
+                  }}
+                  styles={{
+                    section: {
+                      background: 'linear-gradient(90deg, var(--color-success) 0%, var(--color-info) 100%)',
+                    },
+                  }}
                 />
               )}
 
               {/* Space saved/added */}
-              <Group justify="space-between">
-                <Text size="xs" c="dimmed">{fileSizeIncreased ? 'Space added' : 'Space saved'}</Text>
-                <Text size="xs" fw={600} c={fileSizeIncreased ? "red" : "green"}>
+              <Group justify="space-between" pt="xs" style={{ borderTop: '1px solid var(--color-border-secondary)' }}>
+                <Text size="sm" fw={500} style={{ color: 'var(--color-text-secondary)' }}>
+                  {fileSizeIncreased ? 'Space added' : 'Space saved'}
+                </Text>
+                <Text
+                  size="md"
+                  fw={700}
+                  className="animate-count-up"
+                  style={{
+                    color: fileSizeIncreased ? 'var(--color-error)' : 'var(--color-success)',
+                  }}
+                >
                   {formatFileSize(absoluteSpaceDiff)}
                 </Text>
               </Group>
             </Stack>
-          </Paper>
+          </div>
         )}
 
-        <Stack gap="md">
+        <Stack gap="sm">
           {image.processed ? (
-            <Group grow>
-              <Tooltip label="Download compressed image">
-                <ActionIcon
-                  variant="filled"
-                  color="red"
-                  size="lg"
-                  onClick={handleDownload}
-                  style={{ flex: 1 }}
-                >
-                  <Download size={18} />
-                </ActionIcon>
-              </Tooltip>
-              {onCrop && (
-                <Tooltip label="Crop image">
+            <>
+              {/* Secondary Actions */}
+              <Group grow>
+                {onCrop && (
+                  <Tooltip label="Crop image" position="top">
+                    <ActionIcon
+                      variant="subtle"
+                      size="xl"
+                      onClick={() => setShowCrop(true)}
+                      className="elevation-sm btn-elevated-hover"
+                      style={ACTION_BTN_STYLES}
+                    >
+                      <Crop size={20} />
+                    </ActionIcon>
+                  </Tooltip>
+                )}
+                <Tooltip label="Adjust settings" position="top">
                   <ActionIcon
-                    variant="light"
-                    color="gray"
-                    size="lg"
-                    onClick={() => setShowCrop(true)}
-                    style={{ flex: 1 }}
+                    variant="subtle"
+                    size="xl"
+                    onClick={() => setShowSettings(true)}
+                    className="elevation-sm btn-elevated-hover"
+                    style={ACTION_BTN_STYLES}
                   >
-                    <Crop size={18} />
+                    <Settings2 size={20} />
                   </ActionIcon>
                 </Tooltip>
-              )}
-              <Tooltip label="Adjust settings">
-                <ActionIcon
-                  variant="light"
-                  color="gray"
-                  size="lg"
-                  onClick={() => setShowSettings(true)}
-                  style={{ flex: 1 }}
-                  data-tour="image-settings-button"
-                >
-                  <Settings2 size={18} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label={showComparison ? "Hide comparison" : "Show comparison"}>
-                <ActionIcon
-                  variant="light"
-                  color="red"
-                  size="lg"
-                  onClick={() => setShowComparison(!showComparison)}
-                  style={{ flex: 1 }}
-                  data-tour="image-compare-button"
-                >
-                  <Eye size={18} />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
+                <Tooltip label="Compare before/after" position="top">
+                  <ActionIcon
+                    variant="subtle"
+                    size="xl"
+                    onClick={() => setShowComparison(!showComparison)}
+                    className={showComparison ? "elevation-sm" : "elevation-sm btn-elevated-hover"}
+                    style={showComparison ? ACTION_BTN_ACTIVE_STYLE : ACTION_BTN_INACTIVE_STYLE}
+                  >
+                    <Eye size={20} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
+            </>
           ) : (
             <Button
-              leftSection={<Loader size={16} className="animate-spin" />}
-              disabled
+              variant="subtle"
+              size="md"
               fullWidth
-              size="sm"
+              leftSection={<Loader size={18} />}
+              disabled
+              className="shimmer"
+              style={{
+                borderRadius: '10px',
+                height: '44px',
+                backgroundColor: 'var(--color-bg-tertiary)',
+              }}
             >
               Processing...
             </Button>
@@ -492,7 +572,7 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
             opened={showCrop}
             onClose={() => setShowCrop(false)}
             imageUrl={processedUrl}
-            imageName={image.originalFile.name}
+            imageName={image.customFileName || image.originalFile.name}
             imageFormat={image.outputFormat}
             onCropComplete={handleCropComplete}
           />
@@ -503,8 +583,19 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
           opened={showComparison}
           onClose={() => setShowComparison(false)}
           size="90%"
-          title="Image Comparison"
+          title={
+            <Group gap="xs">
+              <Eye size={20} />
+              <Text fw={700} style={{ color: 'var(--color-text-primary)' }}>
+                Image Comparison
+              </Text>
+            </Group>
+          }
           centered
+          styles={COMPARISON_MODAL_STYLES}
+          classNames={{
+            content: 'glass-strong elevation-xl'
+          }}
         >
           <ImageComparison
             image={image}
@@ -513,5 +604,6 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
         </Modal>
       </Stack>
     </Card>
+    </motion.div>
   );
 }

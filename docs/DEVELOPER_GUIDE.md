@@ -1,7 +1,7 @@
 # ImgCrush Developer Guide
 
-**Version:** 1.0.0
-**Last Updated:** 2025-09-30
+**Version:** 2.0.0
+**Last Updated:** 2025-10-01
 **For:** Developers, Contributors, and AI Agents
 
 ---
@@ -43,12 +43,18 @@ ImgCrush is a **privacy-first, client-side image compression and optimization to
 
 - **Client-Side Processing:** Uses Canvas API for all image manipulation
 - **Compression Presets:** 9 pre-configured presets for common use cases
-- **Multiple Formats:** JPEG, PNG, WebP output support
+- **Multiple Formats:** JPEG, PNG, WebP, AVIF output support
 - **Smart Resizing:** Three resize modes (percentage, max-dimensions, exact)
-- **Batch Processing:** Handle multiple images simultaneously
+- **Batch Processing:** Handle multiple images simultaneously with drag-to-reorder
 - **ZIP Download:** Bundle all processed images into a single archive
 - **Interactive Comparison:** Before/after slider with 3 viewing modes
 - **Responsive Design:** Works on desktop, tablet, and mobile
+- **Dark Mode:** Full dark mode support with persistent preference
+- **View Modes:** Grid and table views for different workflows
+- **Bulk Rename:** Multiple naming formats with live preview
+- **Per-Image Settings:** Override global settings for individual images
+- **HEIC Support:** Auto-converts iOS photos to compatible formats
+- **Settings Persistence:** Saves preferences to localStorage
 
 ---
 
@@ -56,7 +62,7 @@ ImgCrush is a **privacy-first, client-side image compression and optimization to
 
 ### Frontend Framework
 
-- **React 18.3**: Modern React with Hooks (no class components)
+- **React 19.1.1**: Modern React with Hooks (no class components)
 - **TypeScript 5.5**: Type-safe development with strict mode
 - **JSX/TSX**: Component syntax
 
@@ -72,18 +78,28 @@ ImgCrush is a **privacy-first, client-side image compression and optimization to
 - **Mantine UI v8** (`@mantine/core`): Primary component library
   - Pre-built accessible components
   - Theming system (customized to red color scheme)
+  - Dark mode support with color scheme toggle
   - Form components, modals, buttons, etc.
-- **Tailwind CSS 3.4**: Utility-first CSS framework
+- **Tailwind CSS v4**: Utility-first CSS framework
+  - CSS-first configuration in `src/index.css`
   - Used alongside Mantine for layout and spacing
   - Responsive grid system
-  - Custom utility classes
+  - Custom CSS variables for theming
 
 ### Icons
 
-- **Lucide React 0.344**: Beautiful, consistent icon library
+- **Lucide React 0.544**: Beautiful, consistent icon library
   - Tree-shakeable (only imports what you use)
   - ISC License (open source friendly)
   - Modern design aesthetic
+
+### Animation
+
+- **Framer Motion 12**: Production-ready motion library
+  - Declarative animations
+  - Layout animations
+  - Gesture support
+  - Used for sidebar transitions and micro-interactions
 
 ### Image Processing
 
@@ -98,20 +114,57 @@ ImgCrush is a **privacy-first, client-side image compression and optimization to
 - **JSZip 3.10**: Generate ZIP files in-browser
   - Batch download functionality
   - Pure JavaScript implementation
+  - Lazy-loaded via dynamic import for performance
+
+### Drag and Drop
+
+- **@dnd-kit/core**: Modern drag and drop toolkit
+  - Accessible by default
+  - Touch and keyboard support
+- **@dnd-kit/sortable**: Sortable preset for @dnd-kit
+  - Used for image reordering
+  - Smooth animations
+
+### Image Cropping
+
+- **react-easy-crop**: Touch-friendly image cropper
+  - Gesture support
+  - Aspect ratio presets
+  - Used in CropModal component
+
+### HEIC Conversion
+
+- **heic2any 0.0.4**: Client-side HEIC to JPEG conversion
+  - Auto-converts iOS photos
+  - 30-second timeout protection
+  - Comprehensive error handling
+
+### EXIF Handling
+
+- **piexifjs 1.0.6**: EXIF data manipulation
+  - Read and write EXIF metadata
+  - Privacy-focused metadata stripping
+  - Orientation correction
 
 ### Dependencies Summary
 
 ```json
 {
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",           // Drag and drop core
+    "@dnd-kit/sortable": "^10.0.0",      // Sortable preset
     "@mantine/core": "^8.3.2",           // UI components
     "@mantine/dropzone": "^8.3.2",       // File upload drag-drop
     "@mantine/hooks": "^8.3.2",          // Utility hooks
     "@mantine/notifications": "^8.3.2",  // Toast notifications
+    "framer-motion": "^12.23.22",        // Animation library
+    "heic2any": "^0.0.4",                // HEIC conversion
     "jszip": "^3.10.1",                  // ZIP file generation
-    "lucide-react": "^0.344.0",          // Icons
-    "react": "^18.3.1",                  // UI library
-    "react-dom": "^18.3.1"               // DOM rendering
+    "lucide-react": "^0.544.0",          // Icons
+    "piexifjs": "^1.0.6",                // EXIF handling
+    "react": "^19.1.1",                  // UI library
+    "react-dom": "^19.1.1",              // DOM rendering
+    "react-easy-crop": "^5.5.2"          // Image cropping
   }
 }
 ```
@@ -229,22 +282,33 @@ App.tsx (Update State)
 imgcrush/
 ├── public/
 │   ├── logo.svg                    # Main logo
+│   ├── logo-darkmode.svg           # Dark mode logo variant
 │   └── favicon.svg                 # Browser tab icon
 │
 ├── src/
 │   ├── components/
 │   │   ├── ui/                     # UI Components
-│   │   │   ├── Header.tsx          # App header (unused in main flow)
-│   │   │   ├── Footer.tsx          # Footer with copyright and GitHub link
-│   │   │   └── ResultsHeader.tsx   # Header shown on results page
+│   │   │   ├── Header.tsx          # App header (legacy)
+│   │   │   ├── Sidebar.tsx         # Main navigation sidebar with stats
+│   │   │   ├── ResultsHeader.tsx   # Deprecated (replaced by Sidebar)
+│   │   │   ├── ResultsAreaHeader.tsx # Header in results area
+│   │   │   └── BulkRenameCallout.tsx # Banner prompting bulk rename
 │   │   │
 │   │   ├── features/               # Feature Components
 │   │   │   ├── ImageUpload.tsx     # Drag-drop file upload + preset selector
-│   │   │   ├── ImageCard.tsx       # Individual image display with stats
+│   │   │   ├── ImageCard.tsx       # Individual image card with stats and actions
+│   │   │   ├── ImageTableView.tsx  # Table view for images
 │   │   │   ├── ImageProcessor.tsx  # Orchestrates processing for all images
-│   │   │   ├── ProcessingControls.tsx # Settings panel with advanced options
+│   │   │   ├── ProcessingControls.tsx # Settings panel (legacy)
 │   │   │   ├── DownloadAll.tsx     # Batch download with ZIP generation
-│   │   │   └── PresetSelector.tsx  # Preset selection UI
+│   │   │   ├── PresetSelector.tsx  # Preset selection UI
+│   │   │   ├── ImageSettingsModal.tsx # Per-image settings editor
+│   │   │   ├── BulkRenameModal.tsx # Bulk rename with naming formats
+│   │   │   └── CropModal.tsx       # Image cropping tool (in progress)
+│   │   │
+│   │   ├── modals/                 # Modal Components
+│   │   │   ├── AddImagesModal.tsx  # Modal for adding more images
+│   │   │   └── GlobalSettingsModal.tsx # Global settings editor
 │   │   │
 │   │   └── comparison/             # Comparison Tools
 │   │       └── ImageComparison.tsx # Before/after comparison modal
@@ -260,32 +324,42 @@ imgcrush/
 │   ├── presets/                    # Compression Presets
 │   │   └── compressionPresets.ts   # Preset definitions and logic
 │   │
+│   ├── hooks/                      # React Hooks
+│   │   └── useKeyboardShortcuts.tsx # Keyboard shortcut handler
+│   │
 │   ├── utils/                      # Utilities
 │   │   ├── imageProcessor.ts       # Main processing entry point
-│   │   └── fileUtils.ts            # File size formatting, etc.
+│   │   ├── fileUtils.ts            # File size formatting, etc.
+│   │   ├── heicConverter.ts        # HEIC to JPEG conversion
+│   │   ├── exifHandler.ts          # EXIF metadata handling
+│   │   ├── settingsStorage.ts      # localStorage persistence
+│   │   └── namingFormats.ts        # Bulk rename naming patterns
 │   │
 │   ├── types/                      # TypeScript Types
-│   │   └── index.ts                # Global type definitions
+│   │   ├── index.ts                # Global type definitions
+│   │   └── piexifjs.d.ts           # Type definitions for piexifjs
 │   │
 │   ├── App.tsx                     # Root component
 │   ├── main.tsx                    # Application entry point
-│   ├── index.css                   # Global styles
+│   ├── ErrorBoundary.tsx           # Error boundary component
+│   ├── index.css                   # Global styles with Tailwind v4 CSS-first config
 │   └── vite-env.d.ts               # Vite type definitions
 │
 ├── docs/                           # Documentation
 │   ├── CONTRIBUTING.md             # Contribution guidelines
 │   ├── SECURITY.md                 # Security policy
-│   └── DEVELOPER_GUIDE.md          # This file (not committed)
+│   └── DEVELOPER_GUIDE.md          # This file
 │
 ├── index.html                      # HTML entry point
 ├── package.json                    # Dependencies and scripts
 ├── tsconfig.json                   # TypeScript configuration
+├── tsconfig.app.json               # App-specific TS config
+├── tsconfig.node.json              # Node-specific TS config
 ├── vite.config.ts                  # Vite configuration
-├── tailwind.config.js              # Tailwind configuration
-├── postcss.config.js               # PostCSS configuration
 ├── eslint.config.js                # ESLint configuration
 ├── .gitignore                      # Git ignore rules
 ├── LICENSE                         # MIT License
+├── CLAUDE.md                       # AI assistant guidelines
 └── README.md                       # Project README
 ```
 
@@ -293,14 +367,16 @@ imgcrush/
 
 | Directory | Purpose | Key Files |
 |-----------|---------|-----------|
-| `src/components/ui/` | Presentational UI components | Header, Footer, ResultsHeader |
-| `src/components/features/` | Business logic components | ImageUpload, ImageProcessor, ProcessingControls |
+| `src/components/ui/` | Presentational UI components | Sidebar, ResultsAreaHeader, BulkRenameCallout |
+| `src/components/features/` | Business logic components | ImageUpload, ImageProcessor, ImageCard, ImageTableView |
+| `src/components/modals/` | Modal dialogs | GlobalSettingsModal, AddImagesModal |
 | `src/components/comparison/` | Specialized comparison tools | ImageComparison |
 | `src/processing/` | Modular processing pipeline | ProcessingPipeline, Processors |
 | `src/presets/` | Compression preset definitions | compressionPresets.ts |
-| `src/utils/` | Helper functions | imageProcessor.ts, fileUtils.ts |
-| `src/types/` | TypeScript type definitions | index.ts |
-| `docs/` | Project documentation | CONTRIBUTING.md, SECURITY.md |
+| `src/hooks/` | Custom React hooks | useKeyboardShortcuts.tsx |
+| `src/utils/` | Helper functions | imageProcessor.ts, heicConverter.ts, namingFormats.ts |
+| `src/types/` | TypeScript type definitions | index.ts, piexifjs.d.ts |
+| `docs/` | Project documentation | CONTRIBUTING.md, SECURITY.md, DEVELOPER_GUIDE.md |
 
 ---
 
@@ -315,14 +391,15 @@ interface ProcessingSettings {
   quality: number;              // 0-1 (0.60 = 60%)
   maxWidth: number;             // Max width in pixels
   maxHeight: number;            // Max height in pixels
-  format: 'jpeg' | 'png' | 'webp';  // Output format
+  format: 'jpeg' | 'png' | 'webp' | 'avif';  // Output format
   resizeMode: 'max-dimensions' | 'exact' | 'percentage';
   percentage: number;           // For percentage resize (0-100)
   exactWidth: number;           // For exact resize
   exactHeight: number;          // For exact resize
-  preserveAspectRatio?: boolean;  // Future use
+  preserveAspectRatio?: boolean;  // Lock aspect ratio for exact resize
   sharpen?: boolean;            // Future use
-  removeMetadata?: boolean;     // Future use (EXIF removal)
+  removeMetadata?: boolean;     // Future use
+  stripExif?: boolean;          // Strip EXIF data (privacy)
 }
 ```
 
@@ -335,13 +412,16 @@ interface ProcessingSettings {
 
 ```typescript
 interface ProcessedImage {
-  id: string;                   // Unique identifier
+  id: string;                   // Unique identifier (crypto.randomUUID())
   originalFile: File;           // Original uploaded file
   originalSize: number;         // Original file size in bytes
   processedBlob: Blob | null;   // Processed image blob
   processedSize: number;        // Processed size in bytes
   processing: boolean;          // Currently being processed
   processed: boolean;           // Processing complete
+  settings?: ProcessingSettings; // Per-image settings (overrides global)
+  customFileName?: string;      // User's custom filename (without extension)
+  outputFormat?: 'jpeg' | 'png' | 'webp' | 'avif'; // Actual output format
 }
 ```
 
@@ -393,32 +473,64 @@ Each processor receives this context, modifies it, and returns updated context f
 ```typescript
 const [files, setFiles] = useState<File[]>([]);
 const [processedImages, setProcessedImages] = useState<ProcessedImage[]>([]);
-const [selectedPreset, setSelectedPreset] = useState<string>('compression-only');
-const [processingSettings, setProcessingSettings] = useState({...});
+const [selectedPreset, setSelectedPreset] = useState<string>(() => loadSelectedPreset() || 'compression-only');
+const [viewMode, setViewMode] = useState<ViewMode>(() => loadViewMode() || 'grid');
+const [processingSettings, setProcessingSettings] = useState<ProcessingSettings>(() => loadProcessingSettings() || DEFAULT_PROCESSING_SETTINGS);
+const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+const [bulkRenameModalOpen, setBulkRenameModalOpen] = useState(false);
+const [addImagesModalOpen, setAddImagesModalOpen] = useState(false);
 ```
 
 **Key Functions:**
 - `handleFilesSelected`: Add new files to processing queue
 - `handleRemoveFile`: Remove image from results
-- `handleClearAll`: Reset entire application
-- `handlePresetChange`: Switch compression preset
+- `handleClearAll`: Reset entire application (with confirmation)
+- `handlePresetChange`: Switch compression preset and trigger reprocessing
+- `handleReorderImages`: Update image order (for drag-to-reorder)
+- `handleUpdateFileName`: Update custom filename for single image
+- `handleBulkRename`: Apply bulk rename with naming format
 - `updateProcessedImage`: Update single image state
 - `regenerateAllImages`: Reprocess all images with current settings
-- `handleScrollToCustomize`: Smooth scroll to settings section
+- `handleUpdateImageSettings`: Update per-image settings
+- `handleApplySettingsToAll`: Apply settings to all images
+- `handleDownloadAll`: Create and download ZIP of all processed images
+- `handlePasteShortcut`: Handle Ctrl/Cmd+V paste from clipboard
+- `handleSaveShortcut`: Handle Ctrl/Cmd+S save/download
 
 **Layout Logic:**
 ```typescript
-{!hasImages ? (
-  // Initial upload view (centered)
-  <ImageUpload minimal={true} />
-) : (
-  // Results view
-  <>
-    <ResultsHeader />
-    <ImageProcessor />
-    <ProcessingControls />
-  </>
-)}
+<div className="min-h-screen">
+  {/* Sidebar - Always visible */}
+  <Sidebar
+    hasImages={hasImages}
+    onReset={handleClearAll}
+    onOpenSettings={() => setSettingsModalOpen(true)}
+    onOpenBulkRename={() => setBulkRenameModalOpen(true)}
+    onDownloadZip={handleDownloadAll}
+    images={processedImages}
+  />
+
+  {/* Main content area */}
+  <main style={{ marginLeft: sidebarCollapsed ? '80px' : '240px' }}>
+    {!hasImages ? (
+      // Initial upload view (centered)
+      <ImageUpload minimal={true} />
+    ) : (
+      // Results view
+      <>
+        <ResultsAreaHeader />
+        <BulkRenameCallout />
+        <ImageProcessor viewMode={viewMode} />
+      </>
+    )}
+  </main>
+
+  {/* Modals */}
+  <GlobalSettingsModal />
+  <BulkRenameModal />
+  <AddImagesModal />
+</div>
 ```
 
 ---
@@ -698,33 +810,177 @@ const handleMouseMove = (e: MouseEvent) => {
 
 ---
 
-### UI Components
+### Sidebar.tsx
 
-#### ResultsHeader.tsx
+**Location:** `src/components/ui/Sidebar.tsx`
+**Purpose:** Main navigation sidebar with actions and stats
 
-**Location:** `src/components/ui/ResultsHeader.tsx`
-**Purpose:** Header shown on results page
+**Props:**
+```typescript
+interface SidebarProps {
+  onReset?: () => void;
+  hasImages?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
+  onOpenSettings?: () => void;
+  onOpenBulkRename?: () => void;
+  onDownloadZip?: () => void;
+  images?: ProcessedImage[];
+}
+```
 
 **Features:**
-- Logo (clickable to reset)
-- Home button (resets to upload screen)
-- GitHub link icon
+- **Logo & branding:** Displays ImgCrush logo with dark mode variant
+- **Navigation items:**
+  - Home (resets application)
+  - Add Images (opens AddImagesModal)
+  - Settings (opens GlobalSettingsModal)
+  - Bulk Rename (opens BulkRenameModal)
+  - Download ZIP (batch download)
+- **Dark mode toggle:** Switches between light and dark themes
+- **Export stats:** Shows compression ratio and space saved
+- **Collapse/expand:** Minimizes to icon-only view
+- **Animations:** Framer Motion for smooth transitions
+- **Persistent state:** Remembers collapse state
 
-#### Footer.tsx
+**Stats Display:**
+```typescript
+const stats = useMemo(() => {
+  const processedImages = images.filter(img => img.processed);
+  const totalOriginal = processedImages.reduce((sum, img) => sum + img.originalSize, 0);
+  const totalProcessed = processedImages.reduce((sum, img) => sum + img.processedSize, 0);
+  const compressionRatio = ((totalOriginal - totalProcessed) / totalOriginal) * 100;
+  return { processedCount, totalOriginal, totalProcessed, compressionRatio };
+}, [images]);
+```
 
-**Location:** `src/components/ui/Footer.tsx`
-**Purpose:** Footer with copyright and links
+---
 
-**Content:**
-- Copyright notice: "© 2025 ImgCrush · 100% client-side processing"
-- GitHub repository link
+### ImageTableView.tsx
 
-#### Header.tsx
+**Location:** `src/components/features/ImageTableView.tsx`
+**Purpose:** Table view for compact image display
 
-**Location:** `src/components/ui/Header.tsx`
-**Purpose:** Full header component (currently unused)
+**Props:**
+```typescript
+interface ImageTableViewProps {
+  images: ProcessedImage[];
+  onRemove: (id: string) => void;
+  globalSettings: ProcessingSettings;
+  onUpdateSettings?: (imageId: string, settings: ProcessingSettings) => void;
+  onApplyToAll?: (settings: ProcessingSettings) => void;
+}
+```
 
-**Note:** This component exists but is not used in the current main flow. May be used in future branches or alternative layouts.
+**Features:**
+- Compact table layout with columns:
+  - Thumbnail (small preview)
+  - Filename (editable inline)
+  - Original Size
+  - Processed Size
+  - Compression Ratio (with colored badge)
+  - Format (badge)
+  - Actions (Download, Settings, Compare, Remove)
+- Inline filename editing (click to edit)
+- Per-row settings modal
+- Efficient rendering with memoization
+
+---
+
+### BulkRenameModal.tsx
+
+**Location:** `src/components/features/BulkRenameModal.tsx`
+**Purpose:** Bulk rename files with naming patterns
+
+**Props:**
+```typescript
+interface BulkRenameModalProps {
+  opened: boolean;
+  onClose: () => void;
+  images: ProcessedImage[];
+  onApply: (renamedFiles: Map<string, string>) => void;
+}
+```
+
+**Naming Formats:**
+| Format | Pattern | Example |
+|--------|---------|---------|
+| `sequential` | image-001, image-002 | image-001.jpg, image-002.jpg |
+| `custom-prefix` | {prefix}-001 | vacation-001.jpg, vacation-002.jpg |
+| `date-sequential` | 2025-10-01-001 | 2025-10-01-001.jpg, 2025-10-01-002.jpg |
+| `preserve-suffix` | {original}-compressed-001 | photo-compressed-001.jpg |
+
+**Features:**
+- Live preview of first 3 filenames
+- Custom prefix input
+- Start number configuration
+- Smart padding (3 digits for <1000 images, 4 for >=1000)
+- Reserved name detection (Windows: CON, PRN, AUX, etc.)
+- Debounced input for performance
+- Shows total count before applying
+
+**Implementation:** Uses `src/utils/namingFormats.ts`
+
+---
+
+### GlobalSettingsModal.tsx
+
+**Location:** `src/components/modals/GlobalSettingsModal.tsx`
+**Purpose:** Edit global compression settings
+
+**Features:**
+- Premium modal design with glassmorphism
+- All processing settings in one place:
+  - Preset selector
+  - Format selector (JPEG, PNG, WebP, AVIF)
+  - Quality slider
+  - Resize mode (percentage, max-dimensions, exact)
+  - Dimension inputs
+  - Aspect ratio lock
+- "Apply & Regenerate" button to reprocess all images
+- Settings persistence to localStorage
+
+---
+
+### ImageSettingsModal.tsx
+
+**Location:** `src/components/features/ImageSettingsModal.tsx`
+**Purpose:** Edit per-image compression settings
+
+**Features:**
+- Same controls as GlobalSettingsModal
+- "Apply to All" button to copy settings to all images
+- Overrides global settings for individual image
+- Shows original image preview
+- Reset to global settings option
+
+---
+
+### UI Components
+
+#### ResultsAreaHeader.tsx
+
+**Location:** `src/components/ui/ResultsAreaHeader.tsx`
+**Purpose:** Header in results area with view switcher
+
+**Features:**
+- Image count display
+- View mode toggle (Grid/Table)
+- Download All button
+- Add More Images button
+- Compression preset badge
+- Settings button
+
+#### BulkRenameCallout.tsx
+
+**Location:** `src/components/ui/BulkRenameCallout.tsx`
+**Purpose:** Banner prompting bulk rename action
+
+**Features:**
+- Displays when 2+ images are processed
+- Shows image count
+- "Rename All Files" button
+- Dismissable (auto-hides after interaction)
+- Smooth animations
 
 ---
 
@@ -980,27 +1236,25 @@ Example:
 
 #### Adding Files
 ```typescript
-// Simple counter for unique IDs (better than Math.random for guaranteeing uniqueness)
-let imageIdCounter = 0;
-
 const handleFilesSelected = useCallback((newFiles: File[]) => {
   setFiles((prev) => [...prev, ...newFiles]);
   setProcessedImages((prev) => [
     ...prev,
     ...newFiles.map((file) => ({
-      id: `img-${Date.now()}-${imageIdCounter++}`, // Guaranteed unique ID
+      id: crypto.randomUUID(), // Guaranteed unique UUID v4
       originalFile: file,
       originalSize: file.size,
       processedBlob: null,
       processedSize: 0,
       processing: false,
       processed: false,
+      settings: { ...processingSettings }, // Attach current global settings
     })),
   ]);
-}, []);
+}, [processingSettings]);
 ```
 
-> **Note:** Using `Date.now()` + counter ensures unique IDs even when processing many files at once. Alternatives include the `nanoid` library for cryptographically secure random IDs, or `crypto.randomUUID()` for UUID v4 generation.
+> **Note:** Using `crypto.randomUUID()` generates RFC4122 version 4 UUIDs, providing guaranteed uniqueness even in concurrent scenarios. This is a browser standard API available in all modern browsers.
 
 #### Changing Preset
 ```typescript
@@ -1049,12 +1303,32 @@ useEffect(() => {
 
 ### State Persistence
 
-**Current:** No persistence - state is lost on page refresh
+**Current Implementation:** Uses localStorage for persistent preferences
 
-**Future:** Could add localStorage persistence for:
-- Selected preset
-- Custom settings
-- Recently used settings
+**Persisted State:**
+- `selectedPreset`: Current compression preset ID
+- `processingSettings`: Global processing settings
+- `viewMode`: Grid or table view preference
+- `darkMode`: Color scheme preference (light/dark)
+
+**Implementation:** `src/utils/settingsStorage.ts`
+
+```typescript
+// Load on mount
+const [selectedPreset, setSelectedPreset] = useState(
+  () => loadSelectedPreset() || 'compression-only'
+);
+
+// Save on change
+useEffect(() => {
+  saveSelectedPreset(selectedPreset);
+}, [selectedPreset]);
+```
+
+**NOT Persisted:**
+- Uploaded files (intentional - privacy)
+- Processed images (would be too large)
+- Modal open states
 
 ---
 
@@ -1259,9 +1533,45 @@ const theme = createTheme({
 ### Styling Approach
 
 **Hybrid System:**
+- **Tailwind CSS v4** with CSS-first configuration in `index.css`
+- **CSS Variables** for theming (light/dark mode)
 - **Mantine components** for UI elements (buttons, inputs, modals)
-- **Tailwind CSS** for layouts, spacing, and utilities
-- **Minimal custom CSS** in `index.css`
+- **Minimal custom CSS** for specific components
+
+### Dark Mode
+
+**Implementation:** Mantine's color scheme system + CSS variables
+
+**Toggle:** Located in Sidebar component
+
+**Persistence:** Saved to localStorage via `settingsStorage.ts`
+
+**CSS Variables:** All colors defined in `:root` and `[data-mantine-color-scheme="dark"]`
+
+```css
+/* Light mode */
+:root {
+  --color-primary: #dc2626;
+  --color-bg-primary: #f8fafc;
+  --color-text-primary: #0f172a;
+}
+
+/* Dark mode */
+[data-mantine-color-scheme="dark"] {
+  --color-primary: #ef4444;
+  --color-bg-primary: #0a0a0f;
+  --color-text-primary: #e2e8f0;
+}
+```
+
+**Loading:** Loaded on app initialization in `main.tsx`
+
+```typescript
+<MantineProvider
+  theme={theme}
+  defaultColorScheme={loadDarkMode() ? 'dark' : 'light'}
+>
+```
 
 ### Mantine Theme
 
@@ -1270,19 +1580,38 @@ const theme = createTheme({
   primaryColor: 'red',
   colors: {
     red: [
-      '#fff1f2',  // 0 - lightest
-      '#ffe4e6',  // 1
-      '#fecdd3',  // 2
-      '#fda4af',  // 3
-      '#fb7185',  // 4
-      '#f43f5e',  // 5 - base
-      '#e11d48',  // 6 - primary
-      '#be123c',  // 7
-      '#9f1239',  // 8
-      '#881337'   // 9 - darkest
+      '#fef2f2',  // 0 - lightest
+      '#fee2e2',  // 1
+      '#fecaca',  // 2
+      '#fca5a5',  // 3
+      '#f87171',  // 4
+      '#ef4444',  // 5 - base (vibrant red)
+      '#dc2626',  // 6 - primary (brand red)
+      '#b91c1c',  // 7
+      '#991b1b',  // 8
+      '#7f1d1d'   // 9 - darkest
+    ],
+    dark: [
+      '#e2e8f0',  // 0 - lightest (for text)
+      '#cbd5e1',  // 1
+      '#94a3b8',  // 2
+      '#64748b',  // 3
+      '#475569',  // 4
+      '#334155',  // 5
+      '#1e1e2e',  // 6 - elevated surfaces
+      '#15151f',  // 7 - secondary bg
+      '#0f0f19',  // 8
+      '#0a0a0f',  // 9 - primary bg (deep dark)
     ]
   },
   defaultRadius: 'md',
+  shadows: {
+    xs: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    sm: '0 2px 4px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+  },
 });
 ```
 
@@ -1351,12 +1680,18 @@ import { Download, Settings, X } from 'lucide-react';
 
 | File | Purpose | Lines | Complexity |
 |------|---------|-------|------------|
-| `src/App.tsx` | Root component, state management | 166 | ⭐⭐⭐ |
-| `src/components/features/ImageProcessor.tsx` | Processing orchestration | 102 | ⭐⭐⭐ |
-| `src/components/features/ProcessingControls.tsx` | Settings UI | ~300 | ⭐⭐⭐⭐ |
-| `src/components/features/ImageCard.tsx` | Image display and stats | ~250 | ⭐⭐⭐ |
+| `src/App.tsx` | Root component, state management | ~540 | ⭐⭐⭐⭐ |
+| `src/components/ui/Sidebar.tsx` | Main navigation sidebar | ~300 | ⭐⭐⭐ |
+| `src/components/features/ImageProcessor.tsx` | Processing orchestration | ~150 | ⭐⭐⭐ |
+| `src/components/features/ImageCard.tsx` | Image display and stats | ~350 | ⭐⭐⭐ |
+| `src/components/features/ImageTableView.tsx` | Table view for images | ~250 | ⭐⭐⭐ |
+| `src/components/features/BulkRenameModal.tsx` | Bulk rename with patterns | ~200 | ⭐⭐⭐ |
+| `src/components/modals/GlobalSettingsModal.tsx` | Settings editor modal | ~400 | ⭐⭐⭐⭐ |
 | `src/processing/ProcessingPipeline.ts` | Processing pipeline | 85 | ⭐⭐⭐ |
 | `src/processing/processors/ResizeProcessor.ts` | Resize logic | 100 | ⭐⭐⭐ |
+| `src/utils/heicConverter.ts` | HEIC to JPEG conversion | 130 | ⭐⭐⭐ |
+| `src/utils/namingFormats.ts` | Bulk rename patterns | ~200 | ⭐⭐⭐ |
+| `src/utils/exifHandler.ts` | EXIF detection and stripping | 220 | ⭐⭐⭐⭐ |
 | `src/presets/compressionPresets.ts` | Preset definitions | 160 | ⭐⭐ |
 
 ### Configuration Files
@@ -1382,9 +1717,10 @@ import { Download, Settings, X } from 'lucide-react';
 
 **Debug:**
 1. Check browser console for errors
-2. Verify file is valid image format
+2. Verify file is valid image format (try HEIC detection)
 3. Check if `processImage` function is resolving
 4. Inspect `ProcessedImage.processing` and `ProcessedImage.processed` states
+5. Check if per-image settings are causing issues
 
 **Solution:**
 ```typescript
@@ -1473,50 +1809,59 @@ npm run build -- --mode analyze
 
 ## Future Enhancements
 
-### Planned Features
+### Completed Features ✅
+
+1. **AVIF Format Support** - Full support in format selector and processing
+2. **HEIC Input Support** - Auto-converts iOS HEIC photos to JPEG
+3. **Dark Mode** - Complete dark mode with Sidebar toggle and localStorage persistence
+4. **Keyboard Shortcuts** - Ctrl/Cmd+V paste, Ctrl/Cmd+S save, Space comparison toggle
+5. **Bulk Rename** - Multiple naming formats with live preview
+6. **Drag-to-Reorder** - Reorder images with @dnd-kit
+7. **Per-Image Settings** - Override global settings for individual images
+8. **View Modes** - Grid and table views for different workflows
+9. **Settings Persistence** - localStorage for preferences
+10. **EXIF Privacy** - Automatic EXIF stripping with detection
+11. **Performance Optimizations** - Extracted inline styles, fixed dependency arrays, lazy-loaded JSZip
+
+### In Progress 🚧
+
+1. **Crop Tool**
+   - CropModal component exists
+   - Uses react-easy-crop
+   - Integration pending
+   - Location: `src/components/features/CropModal.tsx`
+
+### Planned Features 📋
 
 1. **PWA Support**
    - Service worker for offline use
    - Install prompt
    - Caching strategy
 
-2. **AVIF Format Support**
-   - Add AVIF to format options
-   - Update ProcessingPipeline to handle AVIF
-   - Browser compatibility checks
+2. **EXIF Data Preservation Option**
+   - Toggle to preserve/strip EXIF
+   - Currently only strips (privacy-first)
+   - piexifjs already imported
 
-3. **HEIC Input Support**
-   - Convert HEIC (iOS photos) to processable format
-   - May require library (heic2any)
-
-4. **Dark Mode**
-   - Mantine theme switching
-   - localStorage persistence
-   - Toggle in header
-
-5. **EXIF Data Preservation**
-   - Option to preserve/strip EXIF data
-   - Requires EXIF library (exif-js or piexifjs)
-
-6. **Basic Editing Tools**
-   - Crop (before compression)
+3. **Advanced Editing Tools**
    - Rotate/flip
    - Filters (brightness, contrast, saturation)
+   - Sharpening
 
-7. **Watermark Support**
+4. **Watermark Support**
    - Text or image watermark
    - Position and opacity controls
 
-8. **Keyboard Shortcuts**
-   - Ctrl+V: Paste image
-   - Ctrl+Z: Undo
-   - Ctrl+S: Download current image
-   - Space: Toggle comparison
+5. **Additional Keyboard Shortcuts**
+   - Ctrl+Z: Undo last action
+   - Delete: Remove selected image
+   - Arrow keys: Navigate images
 
-9. **Performance Optimizations**
+6. **Further Performance Optimizations**
    - Web Workers for processing (offload from main thread)
    - Streaming for large batches
    - Progressive JPEG encoding
+   - Virtual scrolling for large batches
 
 ### Architecture Considerations
 
@@ -1544,12 +1889,38 @@ npm run build -- --mode analyze
 
 ## Conclusion
 
-This guide provides a comprehensive overview of the ImgCrush project architecture, codebase structure, and development practices. For questions or clarifications, refer to inline code comments or consult the project README.
+This guide provides a comprehensive overview of the ImgCrush project architecture, codebase structure, and development practices. The project has evolved significantly with the addition of dark mode, bulk rename, view modes, per-image settings, and numerous performance optimizations.
+
+**Key Takeaways:**
+- Modern React 19 with TypeScript for type safety
+- Modular processing pipeline using Strategy pattern
+- Privacy-first client-side processing with HEIC and EXIF support
+- Comprehensive dark mode with CSS variables
+- Extensible preset system for common use cases
+- Settings persistence for better UX
+
+For questions or clarifications, refer to inline code comments, the CLAUDE.md file for AI assistants, or consult the project README.
 
 **Happy Coding! 🚀**
 
 ---
 
-**Document Version:** 1.0.0
-**Last Updated:** 2025-09-30
+**Document Version:** 2.0.0
+**Last Updated:** 2025-10-01
 **Maintained By:** ImgCrush Development Team
+
+### Changelog
+
+**v2.0.0 (2025-10-01)**
+- Updated to React 19.1.1 and Tailwind CSS v4
+- Added comprehensive dark mode documentation
+- Documented Sidebar, BulkRename, and view modes
+- Added HEIC conversion and EXIF handling details
+- Updated all component sections with new features
+- Documented settings persistence
+- Updated state management examples
+- Added completed features checklist
+- Corrected unique ID generation (crypto.randomUUID())
+
+**v1.0.0 (2025-09-30)**
+- Initial comprehensive developer guide
