@@ -51,6 +51,17 @@ const ACTION_BTN_STYLES = {
   height: '44px',
 };
 
+const COMPARISON_MODAL_STYLES = {
+  header: {
+    backgroundColor: 'var(--color-bg-elevated)',
+    borderBottom: '1px solid var(--color-border-primary)',
+  },
+  body: {
+    backgroundColor: 'var(--color-bg-elevated)',
+    padding: '24px',
+  },
+};
+
 interface ImageCardProps {
   image: ProcessedImage;
   onRemove: () => void;
@@ -650,8 +661,19 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
           opened={showComparison}
           onClose={() => setShowComparison(false)}
           size="90%"
-          title="Image Comparison"
+          title={
+            <Group gap="xs">
+              <Eye size={20} />
+              <Text fw={700} style={{ color: 'var(--color-text-primary)' }}>
+                Image Comparison
+              </Text>
+            </Group>
+          }
           centered
+          styles={COMPARISON_MODAL_STYLES}
+          classNames={{
+            content: 'glass-strong elevation-xl'
+          }}
         >
           <ImageComparison
             image={image}

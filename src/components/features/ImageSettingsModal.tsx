@@ -4,6 +4,30 @@ import { Settings2, Lock, Unlock, Save, X } from 'lucide-react';
 import { ProcessedImage, ProcessingSettings } from '../../types';
 import { COMPRESSION_PRESETS, getPresetById, applyPreset } from '../../presets/compressionPresets';
 
+// Static styles for consistent theming
+const MODAL_STYLES = {
+  header: {
+    backgroundColor: 'var(--color-bg-elevated)',
+    borderBottom: '1px solid var(--color-border-primary)',
+  },
+  body: {
+    backgroundColor: 'var(--color-bg-elevated)',
+  },
+};
+
+const SUMMARY_PAPER_STYLES = {
+  padding: '20px',
+  borderRadius: '12px',
+  border: '1px solid var(--color-border-primary)',
+  background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(220, 38, 38, 0.04) 100%)',
+};
+
+const BUTTON_STYLES = {
+  borderRadius: '10px',
+  fontWeight: 600,
+  height: '44px',
+};
+
 interface ImageSettingsModalProps {
   opened: boolean;
   onClose: () => void;
@@ -104,43 +128,49 @@ export function ImageSettingsModal({
       onClose={onClose}
       title={
         <Group gap="xs">
-          <Settings2 size={18} />
-          <Text fw={600}>Settings: {image.customFileName || image.originalFile.name}</Text>
+          <Settings2 size={20} />
+          <Text fw={700} style={{ color: 'var(--color-text-primary)' }}>
+            Settings: {image.customFileName || image.originalFile.name}
+          </Text>
         </Group>
       }
       size="lg"
       centered
+      styles={MODAL_STYLES}
+      classNames={{
+        content: 'glass-strong elevation-xl'
+      }}
     >
-      <Stack gap="md">
+      <Stack gap="lg">
         {/* Current Settings Summary */}
-        <Paper p="md" radius="md" withBorder bg="red.0">
+        <Paper className="elevation-md" style={SUMMARY_PAPER_STYLES}>
           <Stack gap="sm">
             <Group gap="xs">
-              <Text size="sm" fw={600} c="gray.8">
+              <Text size="sm" fw={700} style={{ color: 'var(--color-text-primary)' }}>
                 {currentPreset?.icon} {currentPreset?.name}
               </Text>
-              <Badge variant="light" color="red" size="sm">
+              <Badge variant="light" color="red" size="sm" className="badge-primary-subtle">
                 Active
               </Badge>
             </Group>
             {currentPreset?.description && (
-              <Text size="xs" c="dimmed">
+              <Text size="xs" style={{ color: 'var(--color-text-tertiary)' }}>
                 {currentPreset.description}
               </Text>
             )}
             {/* Settings Summary */}
-            <Group gap="lg" wrap="wrap">
+            <Group gap="lg" wrap="wrap" mt="xs">
               <Group gap={4}>
-                <Text size="xs" c="dimmed" fw={500}>Format:</Text>
-                <Badge variant="dot" color="gray" size="sm">{settings.format.toUpperCase()}</Badge>
+                <Text size="xs" style={{ color: 'var(--color-text-secondary)' }} fw={500}>Format:</Text>
+                <Badge variant="dot" color="gray" size="sm" className="badge-gray-subtle">{settings.format.toUpperCase()}</Badge>
               </Group>
               <Group gap={4}>
-                <Text size="xs" c="dimmed" fw={500}>Quality:</Text>
-                <Badge variant="dot" color="gray" size="sm">{Math.round(settings.quality * 100)}%</Badge>
+                <Text size="xs" style={{ color: 'var(--color-text-secondary)' }} fw={500}>Quality:</Text>
+                <Badge variant="dot" color="gray" size="sm" className="badge-gray-subtle">{Math.round(settings.quality * 100)}%</Badge>
               </Group>
               <Group gap={4}>
-                <Text size="xs" c="dimmed" fw={500}>Resize:</Text>
-                <Badge variant="dot" color="gray" size="sm">
+                <Text size="xs" style={{ color: 'var(--color-text-secondary)' }} fw={500}>Resize:</Text>
+                <Badge variant="dot" color="gray" size="sm" className="badge-gray-subtle">
                   {settings.resizeMode === 'percentage'
                     ? settings.percentage === 100 ? 'No resize' : `${settings.percentage}% scale`
                     : settings.resizeMode === 'max-dimensions' && (settings.maxWidth >= 99999 || settings.maxHeight >= 99999)
@@ -341,36 +371,39 @@ export function ImageSettingsModal({
         <Divider />
 
         {/* Action Buttons */}
-        <Stack gap="xs">
-          <Group justify="space-between">
-            <Button
-              variant="light"
-              color="gray"
-              leftSection={<X size={16} />}
-              onClick={onClose}
-            >
-              Cancel
-            </Button>
-            <Group gap="xs">
-              {onApplyToAll && (
-                <Button
-                  variant="outline"
-                  color="red"
-                  onClick={handleApplyToAll}
-                >
-                  Apply to All
-                </Button>
-              )}
+        <Group justify="space-between" mt="md">
+          <Button
+            variant="light"
+            color="gray"
+            leftSection={<X size={18} />}
+            onClick={onClose}
+            className="transition-smooth"
+            style={{ ...BUTTON_STYLES, minWidth: '120px' }}
+          >
+            Cancel
+          </Button>
+          <Group gap="xs">
+            {onApplyToAll && (
               <Button
+                variant="outline"
                 color="red"
-                leftSection={<Save size={16} />}
-                onClick={handleSave}
+                onClick={handleApplyToAll}
+                className="transition-smooth"
+                style={{ ...BUTTON_STYLES, minWidth: '140px' }}
               >
-                Save
+                Apply to All
               </Button>
-            </Group>
+            )}
+            <Button
+              leftSection={<Save size={18} />}
+              onClick={handleSave}
+              className="btn-primary-hover elevation-md"
+              style={{ ...BUTTON_STYLES, minWidth: '120px' }}
+            >
+              Save
+            </Button>
           </Group>
-        </Stack>
+        </Group>
       </Stack>
     </Modal>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Stack } from '@mantine/core';
+import { Modal, Button, Stack, Group, Text } from '@mantine/core';
+import { Settings2 } from 'lucide-react';
 import { ProcessingControls } from '../features/ProcessingControls';
 import { ProcessingSettings } from '../../types';
 
@@ -17,6 +18,7 @@ interface GlobalSettingsModalProps {
 const MODAL_STYLES = {
   header: {
     backgroundColor: 'var(--color-bg-elevated)',
+    borderBottom: '1px solid var(--color-border-primary)',
   },
   body: {
     backgroundColor: 'var(--color-bg-elevated)',
@@ -61,10 +63,20 @@ export function GlobalSettingsModal({
     <Modal
       opened={opened}
       onClose={onClose}
-      title="Global Processing Settings"
+      title={
+        <Group gap="xs">
+          <Settings2 size={20} />
+          <Text fw={700} style={{ color: 'var(--color-text-primary)' }}>
+            Global Processing Settings
+          </Text>
+        </Group>
+      }
       size="xl"
       centered
       styles={MODAL_STYLES}
+      classNames={{
+        content: 'glass-strong elevation-xl'
+      }}
     >
       <Stack gap="lg">
         <ProcessingControls
