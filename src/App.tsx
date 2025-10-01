@@ -79,10 +79,6 @@ function App() {
     }
   }, []);
 
-  const handleReorderImages = useCallback((reorderedImages: ProcessedImage[]) => {
-    setProcessedImages(reorderedImages);
-  }, []);
-
   const handlePresetChange = useCallback((presetId: string) => {
     setSelectedPreset(presetId);
 
@@ -144,6 +140,59 @@ function App() {
         processedSize: 0
       }))
     );
+  }, []);
+
+  const handleCrop = useCallback((imageId: string, croppedBlob: Blob, croppedFileName: string) => {
+    setProcessedImages((prev) =>
+      prev.map((img) => {
+        if (img.id === imageId) {
+          // Store the current processed blob before applying crop
+          return {
+            ...img,
+            preCropBlob: img.processedBlob,
+            preCropSize: img.processedSize,
+            processedBlob: croppedBlob,
+            processedSize: croppedBlob.size,
+            wasCropped: true,
+            customFileName: croppedFileName.replace(/\.[^/.]+$/, ''), // Remove extension from filename
+          };
+        }
+        return img;
+      })
+    );
+
+    notifications.show({
+      title: 'Image Cropped',
+      message: 'Your image has been cropped successfully',
+      color: 'green',
+    });
+  }, []);
+
+  const handleResetCrop = useCallback((imageId: string) => {
+    setProcessedImages((prev) =>
+      prev.map((img) => {
+        if (img.id === imageId && img.wasCropped && img.preCropBlob) {
+          // Restore the pre-crop blob
+          return {
+            ...img,
+            processedBlob: img.preCropBlob,
+            processedSize: img.preCropSize || 0,
+            wasCropped: false,
+            preCropBlob: null,
+            preCropSize: undefined,
+            // Remove the "_cropped" suffix from filename if present
+            customFileName: img.customFileName?.replace(/_cropped$/, ''),
+          };
+        }
+        return img;
+      })
+    );
+
+    notifications.show({
+      title: 'Crop Reset',
+      message: 'Image restored to pre-crop state',
+      color: 'blue',
+    });
   }, []);
 
   const handleDownloadAll = useCallback(async () => {
@@ -524,9 +573,10 @@ function App() {
                 onUpdateImageSettings={handleUpdateImageSettings}
                 onApplyToAll={handleApplySettingsToAll}
                 onClearAll={handleClearAll}
-                onReorderImages={handleReorderImages}
                 onUpdateFileName={handleUpdateFileName}
                 onBulkRename={handleBulkRename}
+                onCrop={handleCrop}
+                onResetCrop={handleResetCrop}
                 viewMode={viewMode}
               />
             </div>

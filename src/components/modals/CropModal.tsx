@@ -256,11 +256,7 @@ export function CropModal({ opened, onClose, imageUrl, imageName, imageFormat, o
                 step={0.1}
                 value={zoom}
                 onChange={(e) => setZoom(parseFloat(e.target.value))}
-                style={{
-                  width: '100%',
-                  cursor: 'pointer',
-                }}
-                className="transition-smooth"
+                className="crop-zoom-slider"
               />
             </div>
 

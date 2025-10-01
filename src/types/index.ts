@@ -9,6 +9,9 @@ export interface ProcessedImage {
   settings?: ProcessingSettings; // Per-image settings (overrides global if present)
   customFileName?: string; // User's custom filename (without extension)
   outputFormat?: 'jpeg' | 'png' | 'webp' | 'avif'; // Actual output format after processing
+  wasCropped?: boolean; // Whether the image has been cropped
+  preCropBlob?: Blob | null; // Original processed blob before cropping (for reset)
+  preCropSize?: number; // Original processed size before cropping (for reset)
 }
 
 export interface ProcessingSettings {

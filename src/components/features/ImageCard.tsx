@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, X, Loader, Check, ArrowRight, Maximize2, FileType, Percent, AlertTriangle, RefreshCw, Eye, Settings2, Crop, Edit2, Save, XCircle, GripVertical } from 'lucide-react';
+import { Download, X, Loader, Check, ArrowRight, Maximize2, FileType, Percent, AlertTriangle, RefreshCw, Eye, Settings2, Crop, Edit2, Save, XCircle, RotateCcw } from 'lucide-react';
 import { Card, Image as MantineImage, Text, Button, Group, Stack, Badge, Paper, Progress, Tooltip, ActionIcon, Alert, Modal, TextInput } from '@mantine/core';
 import { motion } from 'framer-motion';
 import { ProcessedImage, ProcessingSettings } from '../../types';
@@ -33,13 +33,6 @@ const PROCESSING_CONTAINER_STYLES = {
 
 const LOADER_STYLES = { color: 'var(--color-primary)' };
 const TEXT_SECONDARY_STYLES = { color: 'var(--color-text-secondary)' };
-
-const DRAG_HANDLE_STYLES = {
-  position: 'absolute' as const,
-  top: 12,
-  right: 60,
-  borderRadius: '10px',
-};
 
 const REMOVE_BTN_STYLES = {
   position: 'absolute' as const,
@@ -79,15 +72,14 @@ interface ImageCardProps {
   onRemove: () => void;
   onRegenerate?: () => void;
   onCrop?: (croppedBlob: Blob, croppedFileName: string) => void;
+  onResetCrop?: () => void;
   globalSettings: ProcessingSettings;
   onUpdateSettings?: (imageId: string, settings: ProcessingSettings) => void;
   onApplyToAll?: (settings: ProcessingSettings) => void;
   onUpdateFileName?: (imageId: string, fileName: string) => void;
-  dragHandleProps?: any;
-  isDragging?: boolean;
 }
 
-export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSettings, onUpdateSettings, onApplyToAll, onUpdateFileName, dragHandleProps, isDragging }: ImageCardProps) {
+export function ImageCard({ image, onRemove, onRegenerate, onCrop, onResetCrop, globalSettings, onUpdateSettings, onApplyToAll, onUpdateFileName }: ImageCardProps) {
   // Modal state
   const [showComparison, setShowComparison] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -241,17 +233,25 @@ export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSetting
             </Badge>
           )}
 
-          {/* Drag handle - Enhanced */}
-          {dragHandleProps && (
-            <ActionIcon
-              {...dragHandleProps}
-              variant="filled"
-              size="lg"
-              className="elevation-md drag-handle"
-              style={{ ...DRAG_HANDLE_STYLES, cursor: 'grab' }}
-            >
-              <GripVertical size={18} style={{ color: 'white' }} />
-            </ActionIcon>
+          {/* Reset Crop button - Show when image has been cropped */}
+          {image.wasCropped && onResetCrop && (
+            <Tooltip label="Reset crop" position="left">
+              <ActionIcon
+                variant="filled"
+                size="lg"
+                className="elevation-md"
+                style={{
+                  position: 'absolute' as const,
+                  top: 12,
+                  right: 60,
+                  borderRadius: '10px',
+                  backgroundColor: 'var(--color-info)',
+                }}
+                onClick={onResetCrop}
+              >
+                <RotateCcw size={18} style={{ color: 'white' }} />
+              </ActionIcon>
+            </Tooltip>
           )}
 
           {/* Remove button - Enhanced */}

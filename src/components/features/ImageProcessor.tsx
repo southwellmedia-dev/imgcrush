@@ -1,92 +1,10 @@
 import React, { useEffect } from "react";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  rectSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
 import { ImageCard } from "./ImageCard";
 import { ImageTableView } from "./ImageTableView";
 import { ImageUpload } from "./ImageUpload";
 import { ProcessedImage, ProcessingSettings } from "../../types";
 import { processImage } from "../../utils/imageProcessor";
 import { ViewMode } from "../ui/ResultsHeader";
-
-// Sortable wrapper for ImageCard
-interface SortableImageCardProps {
-  image: ProcessedImage;
-  onRemove: () => void;
-  onRegenerate?: () => void;
-  onCrop?: (croppedBlob: Blob, croppedFileName: string) => void;
-  globalSettings: ProcessingSettings;
-  onUpdateSettings?: (imageId: string, settings: ProcessingSettings) => void;
-  onApplyToAll?: (settings: ProcessingSettings) => void;
-  onUpdateFileName?: (imageId: string, fileName: string) => void;
-}
-
-function SortableImageCard(props: SortableImageCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: props.image.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ ...style, position: "relative" }}
-      {...attributes}
-    >
-      {/* Drag Handle - positioned next to delete button */}
-      <div
-        {...listeners}
-        role="button"
-        tabIndex={0}
-        aria-label="Drag to reorder image"
-        aria-roledescription="draggable"
-        className="drag-handle-dark"
-        style={{
-          position: "absolute",
-          top: "12px",
-          right: "60px", // Position to the left of the delete button (12px + 40px button + 8px gap)
-          zIndex: 10,
-          cursor: isDragging ? "grabbing" : "grab",
-          borderRadius: "10px",
-          width: "40px",
-          height: "40px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <GripVertical size={18} color="white" aria-hidden="true" />
-      </div>
-
-      <ImageCard {...props} />
-    </div>
-  );
-}
 
 interface ImageProcessorProps {
   images: ProcessedImage[];
@@ -103,6 +21,8 @@ interface ImageProcessorProps {
   onReorderImages?: (images: ProcessedImage[]) => void;
   onUpdateFileName?: (imageId: string, fileName: string) => void;
   onBulkRename?: (renamedFiles: Map<string, string>) => void;
+  onCrop?: (imageId: string, croppedBlob: Blob, croppedFileName: string) => void;
+  onResetCrop?: (imageId: string) => void;
   viewMode?: ViewMode;
 }
 
@@ -115,30 +35,12 @@ export function ImageProcessor({
   onUpdateImageSettings,
   onApplyToAll,
   onClearAll,
-  onReorderImages,
   onUpdateFileName,
   onBulkRename,
+  onCrop,
+  onResetCrop,
   viewMode = "grid",
 }: ImageProcessorProps) {
-  // Setup drag and drop sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id && onReorderImages) {
-      const oldIndex = images.findIndex((img) => img.id === active.id);
-      const newIndex = images.findIndex((img) => img.id === over.id);
-
-      const reorderedImages = arrayMove(images, oldIndex, newIndex);
-      onReorderImages(reorderedImages);
-    }
-  };
   const regenerateImage = async (imageId: string) => {
     const image = images.find((img) => img.id === imageId);
     if (!image) return;
@@ -153,12 +55,15 @@ export function ImageProcessor({
   };
 
   const handleCrop = (imageId: string) => (croppedBlob: Blob, croppedFileName: string) => {
-    // Update the image with the cropped version
-    onUpdateImage(imageId, {
-      processedBlob: croppedBlob,
-      processedSize: croppedBlob.size,
-      customFileName: croppedFileName.replace(/\.[^/.]+$/, ''), // Remove extension
-    });
+    if (onCrop) {
+      onCrop(imageId, croppedBlob, croppedFileName);
+    }
+  };
+
+  const handleResetCrop = (imageId: string) => () => {
+    if (onResetCrop) {
+      onResetCrop(imageId);
+    }
   };
 
   useEffect(() => {
@@ -204,33 +109,23 @@ export function ImageProcessor({
       {/* Conditional rendering based on view mode */}
       {viewMode === "grid" ? (
         <>
-          {/* Grid View with Drag and Drop - Enhanced spacing */}
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={images.map((img) => img.id)}
-              strategy={rectSortingStrategy}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {images.map((image, index) => (
-                  <SortableImageCard
-                    key={image.id}
-                    image={image}
-                    onRemove={() => onRemoveImage(image.id)}
-                    onRegenerate={() => regenerateImage(image.id)}
-                    onCrop={handleCrop(image.id)}
-                    globalSettings={settings}
-                    onUpdateSettings={onUpdateImageSettings}
-                    onApplyToAll={onApplyToAll}
-                    onUpdateFileName={onUpdateFileName}
-                  />
-                ))}
-              </div>
-            </SortableContext>
-          </DndContext>
+          {/* Grid View - Enhanced spacing */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {images.map((image) => (
+              <ImageCard
+                key={image.id}
+                image={image}
+                onRemove={() => onRemoveImage(image.id)}
+                onRegenerate={() => regenerateImage(image.id)}
+                onCrop={onCrop ? handleCrop(image.id) : undefined}
+                onResetCrop={onResetCrop ? handleResetCrop(image.id) : undefined}
+                globalSettings={settings}
+                onUpdateSettings={onUpdateImageSettings}
+                onApplyToAll={onApplyToAll}
+                onUpdateFileName={onUpdateFileName}
+              />
+            ))}
+          </div>
         </>
       ) : (
         <>
