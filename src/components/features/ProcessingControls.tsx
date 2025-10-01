@@ -4,6 +4,29 @@ import { Slider, Select, NumberInput, Button, Group, Text, Stack, Paper, Grid, B
 import { ProcessingSettings } from '../../types';
 import { COMPRESSION_PRESETS, getPresetById } from '../../presets/compressionPresets';
 
+// Static styles extracted outside component to prevent re-creation on every render
+const PAPER_ELEVATED_STYLE = {
+  backgroundColor: 'var(--color-bg-elevated)',
+  borderWidth: '2px',
+  borderColor: 'var(--color-border-primary)',
+};
+
+const PAPER_SECONDARY_STYLE = {
+  backgroundColor: 'var(--color-bg-secondary)',
+  borderColor: 'var(--color-border-primary)',
+};
+
+const FLEX_CONTAINER_STYLE = {
+  flex: 1,
+};
+
+const BADGE_SUCCESS_STYLE = {
+  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+  color: 'var(--color-success)',
+  border: '1px solid rgba(16, 185, 129, 0.3)',
+  fontWeight: 600,
+};
+
 interface ProcessingControlsProps {
   settings: ProcessingSettings;
   onSettingsChange: (settings: ProcessingSettings) => void;
@@ -43,7 +66,7 @@ export function ProcessingControls({
     if (settings.resizeMode === 'exact' && settings.exactWidth > 0 && settings.exactHeight > 0) {
       setAspectRatio(settings.exactWidth / settings.exactHeight);
     }
-  }, [settings.resizeMode]);
+  }, [settings.resizeMode, settings.exactWidth, settings.exactHeight]);
 
   const updateSetting = <K extends keyof ProcessingSettings>(
     key: K,
@@ -74,7 +97,7 @@ export function ProcessingControls({
   if (collapsed) {
     return (
       <Stack gap="md" mb="xl">
-        <Paper p="xl" withBorder radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', borderWidth: '2px', borderColor: 'var(--color-border-primary)' }}>
+        <Paper p="xl" withBorder radius="md" style={PAPER_ELEVATED_STYLE}>
           <Stack gap="md">
             <Group justify="space-between" align="start">
               <div>
@@ -151,7 +174,7 @@ export function ProcessingControls({
   // Expanded view - full settings
   return (
     <Stack gap="md" mb="xl">
-      <Paper p="xl" withBorder radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', borderWidth: '2px', borderColor: 'var(--color-border-primary)' }}>
+      <Paper p="xl" withBorder radius="md" style={PAPER_ELEVATED_STYLE}>
         <Stack gap="md">
           <Group justify="space-between" align="start">
             <div>
@@ -194,10 +217,10 @@ export function ProcessingControls({
         </Stack>
 
         {/* Current Preset & Settings Display */}
-        <Paper p="md" radius="md" withBorder mb="md" mt="md" style={{ backgroundColor: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-primary)' }}>
+        <Paper p="md" radius="md" withBorder mb="md" mt="md" style={PAPER_SECONDARY_STYLE}>
           <Stack gap="sm">
             <Group justify="space-between" align="start">
-              <div style={{ flex: 1 }}>
+              <div style={FLEX_CONTAINER_STYLE}>
                 <Group gap="xs" mb="xs">
                   <Text size="sm" fw={600} c="gray.8">
                     {currentPreset?.icon} {currentPreset?.name}
@@ -260,7 +283,7 @@ export function ProcessingControls({
             <Button
               variant="subtle"
               size="xs"
-              leftSection={<ChevronDown size={14} style={{ transform: showAdvanced ? 'rotate(180deg)' : 'none' }} />}
+              leftSection={<ChevronDown size={14} className={showAdvanced ? 'chevron-rotated' : ''} />}
               onClick={() => setShowAdvanced(!showAdvanced)}
               mt="md"
               mb="sm"
@@ -499,7 +522,7 @@ export function ProcessingControls({
                 </Stack>
 
                 {/* EXIF Metadata Toggle */}
-                <Paper p="md" radius="md" withBorder mt="md" style={{ backgroundColor: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-primary)' }}>
+                <Paper p="md" radius="md" withBorder mt="md" style={PAPER_SECONDARY_STYLE}>
                   <Group justify="space-between" align="center">
                     <div>
                       <Text size="sm" fw={500}>EXIF Metadata Privacy</Text>
@@ -509,12 +532,7 @@ export function ProcessingControls({
                     </div>
                     <Badge
                       size="lg"
-                      style={{
-                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                        color: 'var(--color-success)',
-                        border: '1px solid rgba(16, 185, 129, 0.3)',
-                        fontWeight: 600,
-                      }}
+                      style={BADGE_SUCCESS_STYLE}
                     >
                       ✓ Always Stripped
                     </Badge>

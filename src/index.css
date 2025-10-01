@@ -719,6 +719,12 @@ input[type="range"]:focus::-moz-range-thumb {
   transform: translateY(-1px);
 }
 
+/* Chevron Rotation */
+.chevron-rotated {
+  transform: rotate(180deg);
+  transition: transform 0.2s ease;
+}
+
 /* Drag Handle / Interactive Elements */
 .drag-handle {
   background-color: rgba(0, 0, 0, 0.6);

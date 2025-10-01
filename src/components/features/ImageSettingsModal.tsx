@@ -77,7 +77,7 @@ export function ImageSettingsModal({
     if (settings.resizeMode === 'exact' && settings.exactWidth > 0 && settings.exactHeight > 0) {
       setAspectRatio(settings.exactWidth / settings.exactHeight);
     }
-  }, [settings.resizeMode]);
+  }, [settings.resizeMode, settings.exactWidth, settings.exactHeight]);
 
   const updateSetting = <K extends keyof ProcessingSettings>(
     key: K,

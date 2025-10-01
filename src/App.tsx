@@ -206,7 +206,7 @@ function App() {
 
         // Remove invalid filename characters (OS-specific but being conservative)
         // Keep: alphanumeric, spaces, hyphens, underscores, parentheses, periods
-        sanitized = sanitized.replace(/[<>:"|?*\x00-\x1F]/g, '_');
+        sanitized = sanitized.replace(/[<>:"|?*\u0000-\u001F]/g, '_');
 
         // Collapse multiple underscores/spaces
         sanitized = sanitized.replace(/_{2,}/g, '_').replace(/\s{2,}/g, ' ');
