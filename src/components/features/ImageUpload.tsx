@@ -1,6 +1,6 @@
-import React, { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { Upload, FileImage, Clipboard } from "lucide-react";
-import { SegmentedControl, Text, Paper, Slider, Select, Stack, Group, useMantineColorScheme } from '@mantine/core';
+import { Paper, Stack, useMantineColorScheme } from '@mantine/core';
 import { ProcessingSettings } from '../../types';
 import { PresetSelector } from './PresetSelector';
 import { getPresetById, applyPreset } from '../../presets/compressionPresets';
@@ -52,20 +52,42 @@ export function ImageUpload({
         return;
       }
 
-      // Convert HEIC files if any
-      const { convertedFiles, conversionCount } = await convertHeicFiles(imageFiles);
+      // Convert HEIC files if any (protected)
+      let convertedFiles: File[] = [];
+      let conversionCount = 0;
+      try {
+        const result = await convertHeicFiles(imageFiles);
+        convertedFiles = result.convertedFiles || [];
+        conversionCount = result.conversionCount || 0;
 
-      // Show notification if HEIC files were converted
-      if (conversionCount > 0) {
-        notifications.show({
-          title: 'HEIC conversion complete',
-          message: `Converted ${conversionCount} HEIC image${conversionCount > 1 ? 's' : ''} to JPEG`,
-          color: 'green',
-        });
-      }
+        // Show notification if HEIC files were converted
+        if (conversionCount > 0) {
+          notifications.show({
+            title: 'HEIC conversion complete',
+            message: `Converted ${conversionCount} HEIC image${conversionCount > 1 ? 's' : ''} to JPEG`,
+            color: 'green',
+          });
+        }
 
-      if (convertedFiles.length > 0) {
-        onFilesSelected(convertedFiles);
+        if (convertedFiles.length > 0) {
+          onFilesSelected(convertedFiles);
+        }
+      } catch (err) {
+        // Conversion failed - log, notify user, and fall back to original files
+        console.error('HEIC conversion failed:', err);
+        try {
+          notifications.show({
+            title: 'HEIC conversion failed',
+            message: 'Could not convert HEIC files. Uploading original files instead.',
+            color: 'red',
+          });
+        } catch (notifyErr) {
+          // ignore notification errors
+          console.warn('Failed to show notification:', notifyErr);
+        }
+
+        // Fall back to original image files so user flow continues
+        onFilesSelected(imageFiles);
       }
     },
     [onFilesSelected]
@@ -93,31 +115,6 @@ export function ImageUpload({
     [processAndSelectFiles]
   );
 
-  const handlePasteFromClipboard = useCallback(async () => {
-    try {
-      const clipboardItems = await navigator.clipboard.read();
-      const imageFiles: File[] = [];
-
-      for (const item of clipboardItems) {
-        for (const type of item.types) {
-          if (type.startsWith('image/')) {
-            const blob = await item.getType(type);
-            const file = new File([blob], `clipboard-image-${Date.now()}.${type.split('/')[1]}`, { type });
-            imageFiles.push(file);
-          }
-        }
-      }
-
-      if (imageFiles.length > 0) {
-        processAndSelectFiles(imageFiles);
-      }
-    } catch (err) {
-      console.error('Failed to read clipboard:', err);
-      // Try fallback paste event method
-      handlePasteEvent();
-    }
-  }, [processAndSelectFiles]);
-
   const handlePasteEvent = useCallback(() => {
     // Listen for paste events as a fallback
     const handlePaste = async (e: ClipboardEvent) => {
@@ -144,20 +141,38 @@ export function ImageUpload({
     return () => document.removeEventListener('paste', handlePaste);
   }, [processAndSelectFiles]);
 
+  const handlePasteFromClipboard = useCallback(async () => {
+    try {
+      const clipboardItems = await navigator.clipboard.read();
+      const imageFiles: File[] = [];
+
+      for (const item of clipboardItems) {
+        for (const type of item.types) {
+          if (type.startsWith('image/')) {
+            const blob = await item.getType(type);
+            const file = new File([blob], `clipboard-image-${Date.now()}.${type.split('/')[1]}`, { type });
+            imageFiles.push(file);
+          }
+        }
+      }
+
+      if (imageFiles.length > 0) {
+        processAndSelectFiles(imageFiles);
+      }
+    } catch (err) {
+      console.error('Failed to read clipboard:', err);
+      // Try fallback paste event method
+      handlePasteEvent();
+    }
+  }, [processAndSelectFiles, handlePasteEvent]);
+
   useEffect(() => {
     // Set up paste event listener
     const cleanup = handlePasteEvent();
     return cleanup;
   }, [handlePasteEvent]);
 
-  const updateSetting = <K extends keyof ProcessingSettings>(
-    key: K,
-    value: ProcessingSettings[K]
-  ) => {
-    if (settings && onSettingsChange) {
-      onSettingsChange({ ...settings, [key]: value });
-    }
-  };
+  // updateSetting is implemented in other components where needed
 
   if (minimal) {
     return (

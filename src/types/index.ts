@@ -7,6 +7,7 @@ export interface ProcessedImage {
   processing: boolean;
   processed: boolean;
   settings?: ProcessingSettings; // Per-image settings (overrides global if present)
+  customFileName?: string; // User's custom filename (without extension)
 }
 
 export interface ProcessingSettings {

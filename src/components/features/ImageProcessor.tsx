@@ -1,4 +1,8 @@
 import React, { useEffect } from 'react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
 import { ImageCard } from './ImageCard';
 import { ImageTableView } from './ImageTableView';
 import { DownloadAll } from './DownloadAll';
@@ -6,6 +10,67 @@ import { ImageUpload } from './ImageUpload';
 import { ProcessedImage, ProcessingSettings } from '../../types';
 import { processImage } from '../../utils/imageProcessor';
 import { ViewMode } from '../ui/ResultsHeader';
+
+// Sortable wrapper for ImageCard
+interface SortableImageCardProps {
+  image: ProcessedImage;
+  onRemove: () => void;
+  onRegenerate?: () => void;
+  globalSettings: ProcessingSettings;
+  onUpdateSettings?: (imageId: string, settings: ProcessingSettings) => void;
+  onApplyToAll?: (settings: ProcessingSettings) => void;
+  onUpdateFileName?: (imageId: string, fileName: string) => void;
+}
+
+function SortableImageCard(props: SortableImageCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: props.image.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={{ ...style, position: 'relative' }} {...attributes}>
+      {/* Drag Handle - positioned next to delete button */}
+      <div
+        {...listeners}
+        style={{
+          position: 'absolute',
+          top: '8px',
+          right: '48px', // Position to the left of the delete button
+          zIndex: 10,
+          cursor: isDragging ? 'grabbing' : 'grab',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          borderRadius: '4px',
+          padding: '4px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'background-color 0.2s',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+        }}
+      >
+        <GripVertical size={16} color="white" />
+      </div>
+
+      <ImageCard {...props} />
+    </div>
+  );
+}
 
 interface ImageProcessorProps {
   images: ProcessedImage[];
@@ -17,6 +82,8 @@ interface ImageProcessorProps {
   onUpdateImageSettings?: (imageId: string, settings: ProcessingSettings) => void;
   onApplyToAll?: (settings: ProcessingSettings) => void;
   onClearAll?: () => void;
+  onReorderImages?: (images: ProcessedImage[]) => void;
+  onUpdateFileName?: (imageId: string, fileName: string) => void;
   viewMode?: ViewMode;
 }
 
@@ -30,8 +97,29 @@ export function ImageProcessor({
   onUpdateImageSettings,
   onApplyToAll,
   onClearAll,
+  onReorderImages,
+  onUpdateFileName,
   viewMode = 'grid'
 }: ImageProcessorProps) {
+  // Setup drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id && onReorderImages) {
+      const oldIndex = images.findIndex((img) => img.id === active.id);
+      const newIndex = images.findIndex((img) => img.id === over.id);
+
+      const reorderedImages = arrayMove(images, oldIndex, newIndex);
+      onReorderImages(reorderedImages);
+    }
+  };
   const regenerateImage = async (imageId: string) => {
     const image = images.find(img => img.id === imageId);
     if (!image) return;
@@ -91,27 +179,39 @@ export function ImageProcessor({
       {/* Conditional rendering based on view mode */}
       {viewMode === 'grid' ? (
         <>
-          {/* Grid View */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {images.map((image) => (
-              <ImageCard
-                key={image.id}
-                image={image}
-                onRemove={() => onRemoveImage(image.id)}
-                onRegenerate={() => regenerateImage(image.id)}
-                globalSettings={settings}
-                onUpdateSettings={onUpdateImageSettings}
-                onApplyToAll={onApplyToAll}
-              />
-            ))}
+          {/* Grid View with Drag and Drop */}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={images.map(img => img.id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {images.map((image) => (
+                  <SortableImageCard
+                    key={image.id}
+                    image={image}
+                    onRemove={() => onRemoveImage(image.id)}
+                    onRegenerate={() => regenerateImage(image.id)}
+                    globalSettings={settings}
+                    onUpdateSettings={onUpdateImageSettings}
+                    onApplyToAll={onApplyToAll}
+                    onUpdateFileName={onUpdateFileName}
+                  />
+                ))}
 
-            {/* Add more images - fills remaining columns with full height */}
-            {onFilesSelected && (
-              <div style={dropZoneStyle} className="h-full">
-                <ImageUpload onFilesSelected={onFilesSelected} minimal={false} />
+                {/* Add more images - fills remaining columns with full height */}
+                {onFilesSelected && (
+                  <div style={dropZoneStyle} className="h-full">
+                    <ImageUpload onFilesSelected={onFilesSelected} minimal={false} />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </SortableContext>
+          </DndContext>
         </>
       ) : (
         <>

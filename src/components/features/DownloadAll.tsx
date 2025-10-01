@@ -1,4 +1,4 @@
-import React from 'react';
+// React import not required with new JSX transform
 import { Download, Package, TrendingDown, Check, Trash2 } from 'lucide-react';
 import { Paper, Group, Stack, Text, Button, Badge, Progress } from '@mantine/core';
 import JSZip from 'jszip';
@@ -14,9 +14,15 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
   const handleDownloadAll = async () => {
     const zip = new JSZip();
 
-    images.forEach((image, index) => {
+    images.forEach((image) => {
       if (image.processedBlob) {
-        const filename = `compressed_${image.originalFile.name}`;
+        // Use custom filename if set, otherwise use original with 'compressed_' prefix
+        const originalName = image.originalFile.name;
+        const extension = originalName.substring(originalName.lastIndexOf('.'));
+        const filename = image.customFileName
+          ? `${image.customFileName}${extension}`
+          : `compressed_${originalName}`;
+
         zip.file(filename, image.processedBlob);
       }
     });
@@ -66,32 +72,62 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
           </div>
 
           <Group gap="xl" wrap="wrap">
-            <Paper p="md" radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', border: '1px solid var(--color-border-secondary)' }}>
-              <Group gap="xs" mb={6}>
-                <Package size={16} style={{ color: 'var(--color-text-muted)' }} />
-                <Text size="xs" style={{ color: 'var(--color-text-tertiary)' }} fw={500}>Original Size</Text>
+            <Paper
+              p="lg"
+              radius="md"
+              withBorder
+              style={{
+                backgroundColor: 'var(--color-bg-elevated)',
+                borderColor: '#ef4444',
+                borderWidth: '2px',
+                minWidth: '180px'
+              }}
+            >
+              <Group gap="xs" mb={8}>
+                <Package size={18} color="#ef4444" />
+                <Text size="sm" style={{ color: 'var(--color-text-secondary)' }} fw={600}>Original Size</Text>
               </Group>
-              <Text size="xl" fw={700} style={{ color: 'var(--color-text-primary)' }}>{formatFileSize(totalOriginalSize)}</Text>
+              <Text size="xl" fw={700} style={{ color: '#ef4444' }}>{formatFileSize(totalOriginalSize)}</Text>
             </Paper>
 
-            <Paper p="md" radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', border: '1px solid var(--color-border-secondary)' }}>
-              <Group gap="xs" mb={6}>
-                <Check size={16} color="#10b981" />
-                <Text size="xs" style={{ color: 'var(--color-text-tertiary)' }} fw={500}>Compressed Size</Text>
+            <Paper
+              p="lg"
+              radius="md"
+              withBorder
+              style={{
+                backgroundColor: 'var(--color-bg-elevated)',
+                borderColor: '#10b981',
+                borderWidth: '2px',
+                minWidth: '180px'
+              }}
+            >
+              <Group gap="xs" mb={8}>
+                <Check size={18} color="#10b981" />
+                <Text size="sm" style={{ color: 'var(--color-text-secondary)' }} fw={600}>Compressed</Text>
               </Group>
-              <Text size="xl" fw={700} color="green.4">{formatFileSize(totalProcessedSize)}</Text>
+              <Text size="xl" fw={700} style={{ color: '#10b981' }}>{formatFileSize(totalProcessedSize)}</Text>
             </Paper>
 
-            <Paper p="md" radius="md" style={{ backgroundColor: 'var(--color-bg-elevated)', border: '1px solid var(--color-border-secondary)' }}>
-              <Group gap="xs" mb={6}>
-                <TrendingDown size={16} color="#10b981" />
-                <Text size="xs" style={{ color: 'var(--color-text-tertiary)' }} fw={500}>Space Saved</Text>
+            <Paper
+              p="lg"
+              radius="md"
+              withBorder
+              style={{
+                backgroundColor: 'var(--color-bg-elevated)',
+                borderColor: '#10b981',
+                borderWidth: '2px',
+                minWidth: '180px'
+              }}
+            >
+              <Group gap="xs" mb={8}>
+                <TrendingDown size={18} color="#10b981" />
+                <Text size="sm" style={{ color: 'var(--color-text-secondary)' }} fw={600}>Space Saved</Text>
               </Group>
               <Group gap="sm" align="center">
-                <Text size="xl" fw={700} color="green">{compressionRatio.toFixed(0)}%</Text>
+                <Text size="xl" fw={700} style={{ color: '#10b981' }}>{compressionRatio.toFixed(0)}%</Text>
                 <Badge
                   variant="filled"
-                  color="green"
+                  style={{ backgroundColor: '#10b981', color: 'white' }}
                   size="lg"
                 >
                   {formatFileSize(totalSaved)}
@@ -102,10 +138,12 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
 
           <Progress
             value={compressionRatio}
-            color="green"
             size="lg"
             radius="xl"
-            style={{ maxWidth: 500 }}
+            color="green"
+            style={{
+              maxWidth: 500,
+            }}
           />
         </Stack>
 
@@ -116,6 +154,7 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
               leftSection={<Trash2 size={20} />}
               onClick={onClearAll}
               variant="outline"
+              color="gray"
               styles={{
                 root: {
                   fontSize: '15px',
@@ -123,11 +162,12 @@ export function DownloadAll({ images, onClearAll }: DownloadAllProps) {
                   paddingLeft: '28px',
                   paddingRight: '28px',
                   height: '56px',
-                  borderColor: '#6b7280',
-                  color: '#e5e7eb',
+                  borderWidth: '2px',
+                  color: 'var(--color-text-primary)',
+                  borderColor: 'var(--color-border-primary)',
                   '&:hover': {
-                    backgroundColor: '#374151',
-                    borderColor: '#9ca3af'
+                    backgroundColor: 'var(--color-hover-bg)',
+                    borderColor: 'var(--color-text-secondary)'
                   }
                 }
               }}

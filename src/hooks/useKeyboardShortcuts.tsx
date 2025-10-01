@@ -7,42 +7,42 @@ export interface KeyboardShortcutHandlers {
   onToggleComparison?: () => void;
 }
 
-export function useKeyboardShortcuts(handlers: KeyboardShortcutHandlers) {
+export function useKeyboardShortcuts({ onPaste, onSave, onEscape, onToggleComparison }: KeyboardShortcutHandlers) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ctrl/Cmd + V - Paste from clipboard
-      if ((e.ctrlKey || e.metaKey) && e.key === 'v' && handlers.onPaste) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v' && onPaste) {
         // Only trigger if not in an input field
         const target = e.target as HTMLElement;
         if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
           e.preventDefault();
-          handlers.onPaste();
+          onPaste();
         }
       }
 
       // Ctrl/Cmd + S - Save/Download
-      if ((e.ctrlKey || e.metaKey) && e.key === 's' && handlers.onSave) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's' && onSave) {
         e.preventDefault();
-        handlers.onSave();
+        onSave();
       }
 
       // Escape - Close modals or cancel actions
-      if (e.key === 'Escape' && handlers.onEscape) {
-        handlers.onEscape();
+      if (e.key === 'Escape' && onEscape) {
+        onEscape();
       }
 
       // Space - Toggle comparison (when viewing an image)
-      if (e.key === ' ' && handlers.onToggleComparison) {
+      if (e.key === ' ' && onToggleComparison) {
         // Only trigger if not in an input field
         const target = e.target as HTMLElement;
         if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && target.tagName !== 'BUTTON') {
           e.preventDefault();
-          handlers.onToggleComparison();
+          onToggleComparison();
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlers]);
+  }, [onPaste, onSave, onEscape, onToggleComparison]);
 }

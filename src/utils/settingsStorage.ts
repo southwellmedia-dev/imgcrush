@@ -18,6 +18,7 @@ export const DEFAULT_PROCESSING_SETTINGS: ProcessingSettings = {
   percentage: 100,
   exactWidth: 800,
   exactHeight: 600,
+  stripExif: true, // Strip EXIF by default for privacy
 };
 
 /**

@@ -1,30 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { Download, X, Loader, Check, ArrowRight, Maximize2, FileType, Percent, AlertTriangle, RefreshCw, Eye, Settings2 } from 'lucide-react';
-import { Card, Image as MantineImage, Text, Button, Group, Stack, Badge, Paper, Progress, Tooltip, ActionIcon, Alert, Modal } from '@mantine/core';
+import React, { useState, useEffect, useRef } from 'react';
+import { Download, X, Loader, Check, ArrowRight, Maximize2, FileType, Percent, AlertTriangle, RefreshCw, Eye, Settings2, Crop, Edit2, Save, XCircle } from 'lucide-react';
+import { Card, Image as MantineImage, Text, Button, Group, Stack, Badge, Paper, Progress, Tooltip, ActionIcon, Alert, Modal, TextInput } from '@mantine/core';
 import { ProcessedImage, ProcessingSettings } from '../../types';
 import { formatFileSize } from '../../utils/fileUtils';
 import { ImageComparison } from '../comparison/ImageComparison';
 import { ImageSettingsModal } from './ImageSettingsModal';
+import { CropModal } from './CropModal';
 
 interface ImageCardProps {
   image: ProcessedImage;
   onRemove: () => void;
   onRegenerate?: () => void;
+  onCrop?: (croppedBlob: Blob, croppedFileName: string) => void;
   globalSettings: ProcessingSettings;
   onUpdateSettings?: (imageId: string, settings: ProcessingSettings) => void;
   onApplyToAll?: (settings: ProcessingSettings) => void;
+  onUpdateFileName?: (imageId: string, fileName: string) => void;
 }
 
-export function ImageCard({ image, onRemove, onRegenerate, globalSettings, onUpdateSettings, onApplyToAll }: ImageCardProps) {
-  const [originalUrl, setOriginalUrl] = useState<string>('');
-  const [processedUrl, setProcessedUrl] = useState<string>('');
+export function ImageCard({ image, onRemove, onRegenerate, onCrop, globalSettings, onUpdateSettings, onApplyToAll, onUpdateFileName }: ImageCardProps) {
+  const [originalUrl, setOriginalUrl] = useState<string | null>(null);
+  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
   const [originalDimensions, setOriginalDimensions] = useState<{ width: number; height: number } | null>(null);
   const [processedDimensions, setProcessedDimensions] = useState<{ width: number; height: number } | null>(null);
   const [showComparison, setShowComparison] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCrop, setShowCrop] = useState(false);
+
+  // Filename editing state
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedFileName, setEditedFileName] = useState('');
+
+  // Use refs to track blob URLs and prevent double-revocation in StrictMode
+  const originalUrlRef = useRef<string | null>(null);
+  const processedUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // Validate the file before creating blob URL
+    if (!image.originalFile || !(image.originalFile instanceof Blob)) {
+      console.error('Invalid originalFile:', image.originalFile);
+      return;
+    }
+
+    // Revoke old URL if it exists (only when dependency changes)
+    if (originalUrlRef.current) {
+      URL.revokeObjectURL(originalUrlRef.current);
+    }
+
     const url = URL.createObjectURL(image.originalFile);
+    originalUrlRef.current = url;
     setOriginalUrl(url);
 
     // Get original image dimensions
@@ -32,14 +56,35 @@ export function ImageCard({ image, onRemove, onRegenerate, globalSettings, onUpd
     img.onload = () => {
       setOriginalDimensions({ width: img.width, height: img.height });
     };
+    img.onerror = (e) => {
+      console.error('Failed to load original image dimensions:', {
+        url,
+        fileName: image.originalFile.name,
+        fileSize: image.originalFile.size,
+        fileType: image.originalFile.type,
+        error: e
+      });
+    };
     img.src = url;
 
-    return () => URL.revokeObjectURL(url);
+    // Don't revoke in cleanup - let it persist for StrictMode compatibility
   }, [image.originalFile]);
 
   useEffect(() => {
     if (image.processedBlob) {
+      // Validate the blob before creating URL
+      if (!(image.processedBlob instanceof Blob)) {
+        console.error('Invalid processedBlob:', image.processedBlob);
+        return;
+      }
+
+      // Revoke old URL if it exists (only when dependency changes)
+      if (processedUrlRef.current) {
+        URL.revokeObjectURL(processedUrlRef.current);
+      }
+
       const url = URL.createObjectURL(image.processedBlob);
+      processedUrlRef.current = url;
       setProcessedUrl(url);
 
       // Get processed image dimensions
@@ -47,23 +92,71 @@ export function ImageCard({ image, onRemove, onRegenerate, globalSettings, onUpd
       img.onload = () => {
         setProcessedDimensions({ width: img.width, height: img.height });
       };
+      img.onerror = (e) => {
+        console.error('Failed to load processed image dimensions:', {
+          url,
+          blobSize: image.processedBlob.size,
+          blobType: image.processedBlob.type,
+          error: e
+        });
+      };
       img.src = url;
 
-      return () => URL.revokeObjectURL(url);
+      // Don't revoke in cleanup - let it persist for StrictMode compatibility
     }
   }, [image.processedBlob]);
+
+  // Cleanup blob URLs only on component unmount
+  useEffect(() => {
+    return () => {
+      if (originalUrlRef.current) {
+        URL.revokeObjectURL(originalUrlRef.current);
+      }
+      if (processedUrlRef.current) {
+        URL.revokeObjectURL(processedUrlRef.current);
+      }
+    };
+  }, []); // Empty deps = only runs cleanup on unmount
 
   const handleDownload = () => {
     if (image.processedBlob) {
       const url = URL.createObjectURL(image.processedBlob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `compressed_${image.originalFile.name}`;
+
+      // Use custom filename if set, otherwise use original
+      const originalName = image.originalFile.name;
+      const extension = originalName.substring(originalName.lastIndexOf('.'));
+      const fileName = image.customFileName
+        ? `${image.customFileName}${extension}`
+        : `compressed_${originalName}`;
+
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
+  };
+
+  const handleEditFileName = () => {
+    // Get filename without extension
+    const originalName = image.originalFile.name;
+    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
+    setEditedFileName(image.customFileName || nameWithoutExt);
+    setIsEditingName(true);
+  };
+
+  const handleSaveFileName = () => {
+    if (onUpdateFileName && editedFileName.trim()) {
+      onUpdateFileName(image.id, editedFileName.trim());
+    }
+    setIsEditingName(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingName(false);
+    setEditedFileName('');
   };
 
   const compressionRatio = image.processedSize > 0
@@ -96,7 +189,7 @@ export function ImageCard({ image, onRemove, onRegenerate, globalSettings, onUpd
               height={250}
               fit="cover"
             />
-          ) : (
+          ) : originalUrl ? (
             <MantineImage
               src={originalUrl}
               alt="Original"
@@ -104,7 +197,7 @@ export function ImageCard({ image, onRemove, onRegenerate, globalSettings, onUpd
               fit="cover"
               style={{ opacity: 0.5 }}
             />
-          )}
+          ) : null}
 
           {/* Status badge */}
           {image.processed && (
@@ -132,9 +225,57 @@ export function ImageCard({ image, onRemove, onRegenerate, globalSettings, onUpd
       </Card.Section>
 
       <Stack gap="sm" mt="md">
-        <Text size="sm" fw={500} style={{ wordBreak: 'break-word' }}>
-          {image.originalFile.name}
-        </Text>
+        {/* Filename with inline editing */}
+        {isEditingName ? (
+          <Group gap="xs" align="center">
+            <TextInput
+              value={editedFileName}
+              onChange={(e) => setEditedFileName(e.target.value)}
+              size="sm"
+              style={{ flex: 1 }}
+              placeholder="Enter filename"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSaveFileName();
+                if (e.key === 'Escape') handleCancelEdit();
+              }}
+              autoFocus
+            />
+            <ActionIcon
+              variant="filled"
+              color="green"
+              size="sm"
+              onClick={handleSaveFileName}
+            >
+              <Save size={14} />
+            </ActionIcon>
+            <ActionIcon
+              variant="filled"
+              color="gray"
+              size="sm"
+              onClick={handleCancelEdit}
+            >
+              <XCircle size={14} />
+            </ActionIcon>
+          </Group>
+        ) : (
+          <Group gap="xs" align="center">
+            <Text size="sm" fw={500} style={{ wordBreak: 'break-word', flex: 1 }}>
+              {image.customFileName
+                ? `${image.customFileName}${image.originalFile.name.substring(image.originalFile.name.lastIndexOf('.'))}`
+                : image.originalFile.name}
+            </Text>
+            <Tooltip label="Edit filename">
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                size="sm"
+                onClick={handleEditFileName}
+              >
+                <Edit2 size={14} />
+              </ActionIcon>
+            </Tooltip>
+          </Group>
+        )}
 
         {/* Warning if file size increased */}
         {image.processed && fileSizeIncreased && (

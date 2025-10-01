@@ -70,6 +70,10 @@ function App() {
     }
   }, []);
 
+  const handleReorderImages = useCallback((reorderedImages: ProcessedImage[]) => {
+    setProcessedImages(reorderedImages);
+  }, []);
+
   const handlePresetChange = useCallback((presetId: string) => {
     setSelectedPreset(presetId);
 
@@ -98,6 +102,12 @@ function App() {
     },
     []
   );
+
+  const handleUpdateFileName = useCallback((imageId: string, fileName: string) => {
+    setProcessedImages((prev) =>
+      prev.map((img) => (img.id === imageId ? { ...img, customFileName: fileName } : img))
+    );
+  }, []);
 
   const regenerateAllImages = useCallback(() => {
     // Reset all images to unprocessed state to trigger reprocessing
@@ -282,6 +292,8 @@ function App() {
                   onUpdateImageSettings={handleUpdateImageSettings}
                   onApplyToAll={handleApplySettingsToAll}
                   onClearAll={handleClearAll}
+                  onReorderImages={handleReorderImages}
+                  onUpdateFileName={handleUpdateFileName}
                   viewMode={viewMode}
                 />
 

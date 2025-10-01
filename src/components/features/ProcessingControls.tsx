@@ -495,6 +495,21 @@ export function ProcessingControls({
                     </Stack>
                   )}
                 </Stack>
+
+                {/* EXIF Metadata Toggle */}
+                <Paper p="md" radius="md" withBorder mt="md" style={{ backgroundColor: 'var(--color-bg-elevated)' }}>
+                  <Group justify="space-between" align="center">
+                    <div>
+                      <Text size="sm" fw={500}>EXIF Metadata Privacy</Text>
+                      <Text size="xs" c="dimmed">
+                        All images automatically have EXIF data removed (camera info, GPS, timestamps) for your privacy
+                      </Text>
+                    </div>
+                    <Badge color="green" variant="light" size="lg">
+                      ✓ Always Stripped
+                    </Badge>
+                  </Group>
+                </Paper>
               </>
             )}
           </>
